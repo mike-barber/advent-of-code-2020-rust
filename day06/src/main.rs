@@ -44,12 +44,16 @@ fn main() -> Result<(), Box<dyn Error>> {
     let counts_everyone: Vec<_> = groups
         .iter()
         .map(|g| {
-            let sets = g.iter().map(|l| l.chars().collect::<HashSet<char>>());
-            let intersection = sets.fold(None, |acc_option, set| match acc_option {
-                None => Some(set.clone()),
-                Some(acc) => Some(&acc & &set),
-            });
-
+            let mut sets_iter = g.iter().map(|l| l.chars().collect::<HashSet<char>>());
+            // let intersection = sets_iter.fold(None, |acc_option, set| match acc_option {
+            //     None => Some(set.clone()),
+            //     Some(acc) => Some(&acc & &set),
+            // });
+            
+            // very smart implementation by taking first element
+            let intersection = sets_iter
+                .next()
+                .map(|s| sets_iter.fold(s, |acc, set| &acc & &set));
             match intersection {
                 None => 0,
                 Some(ii) => ii.len(),
