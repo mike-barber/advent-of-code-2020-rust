@@ -21,6 +21,7 @@ fn main() -> Result<(), Box<dyn Error>> {
         }
     }
 
+    // part 1 -- which questions *anyone* answered yes to in a group
     let counts: Vec<_> = groups.iter().map(|g| {
         let found_chars = g.iter().fold(HashSet::new(), |mut set, l| {
             for c in l.chars() {
@@ -31,8 +32,24 @@ fn main() -> Result<(), Box<dyn Error>> {
         found_chars.len()
     }).collect();
 
-    println!("Counts: {:?}", counts);
-    println!("Sum of counts: {}", counts.iter().sum::<usize>());
+    println!("Part1 -> Counts: {:?}, sum: {}", counts, counts.iter().sum::<usize>());
+
+    // part 2 -- which questions *everyone* in a group answered yes to
+    let counts_everyone: Vec<_> = groups.iter().map(|g| {
+        let sets = g.iter().map(|l| l.chars().collect::<HashSet<char>>());
+        let intersection = sets.fold(None, |acc_option, set| {
+            match acc_option {
+                None => Some(set.clone()),
+                Some(acc) => Some(&acc & &set)
+            }
+        });
+
+        match intersection {
+            None => 0,
+            Some(ii) => ii.len()
+        }
+    }).collect();
+    println!("Part2 -> Counts: {:?}, sum: {}", counts_everyone, counts_everyone.iter().sum::<usize>());
 
     Ok(())
 }
