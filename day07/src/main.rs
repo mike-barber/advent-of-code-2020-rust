@@ -49,6 +49,16 @@ fn containers_for(bag: &Bag, rules: &[BagRule]) -> HashSet<Bag> {
     set
 }
 
+// recursively count the bags inside a given bag
+fn bags_inside(bag: &Bag, rules: &[BagRule]) -> i32 {
+    let rule = rules.iter().find(|&r| &r.bag == bag).expect("missing rule");
+    let mut sum = 1; // this bag
+    for bq in rule.contains.iter() {
+        sum += bq.number * bags_inside(&bq.bag, rules);
+    }
+    sum
+}
+
 fn main() -> Result<(), Box<dyn Error>> {
     let buffered = BufReader::new(File::open("input.txt")?);
 
@@ -93,6 +103,16 @@ fn main() -> Result<(), Box<dyn Error>> {
         let containers = containers_for(&my_bag, &rules);
         println!("Part 1 -> Containers: {:?}", containers);
         println!("Part 1 -> Number: {}", containers.len());
+    }
+
+    // part 2 -- find out how many total bags a single bag contains
+    {
+        let my_bag = Bag("shiny gold".into());
+        let contained_bags = bags_inside(&my_bag, &rules);
+        println!(
+            "Part 2 -> Contained bags less this bag: {}",
+            contained_bags - 1
+        );
     }
 
     Ok(())
