@@ -55,34 +55,31 @@ impl AdaptersProblem {
 
     fn count_chains(&self) -> i32 {
         let bag: HashSet<i32> = self.adapters.iter().copied().collect();
-        self.count_chains_internal(vec![0], bag)
+        self.count_chains_internal(0, bag)
     }
 
     // need to use the adapters to reach the target voltage; not necessary to use all of them
-    fn count_chains_internal(&self, chain: Vec<i32>, bag: HashSet<i32>) -> i32 {
-        let last = *chain.last().unwrap();
-        if last+3 == self.final_joltage {
+    fn count_chains_internal(&self, last: i32, bag: HashSet<i32>) -> i32 {
+        if last + 3 == self.final_joltage {
             // we've hit our target; this chain terminates valid
             1
         } else {
             // find all adapters that can connect to the end of the existing chain
-            let mut viable_adapters: Vec<_> = bag
+            // recursively consider options
+            let valid_chains = bag
                 .iter()
                 .filter(|&&adapt| {
                     let diff = adapt - last;
                     diff >= 1 && diff <= 3
                 })
-                .collect();
-            // now sort, and pick the smallest item first (greedy)
-            viable_adapters.sort();
-            // recursively consider options
-            let valid_chains = viable_adapters.iter().map(|&adapt| {
-                let mut new_chain = chain.clone();
-                let mut new_bag = bag.clone();
-                new_chain.push(*adapt);
-                new_bag.remove(adapt);
-                self.count_chains_internal(new_chain, new_bag)
-            });
+                .map(|&adapt| {
+                    // create new chain
+                    let new_last = adapt;
+                    // aggressively trim adapters that are not viable for the next iteration
+                    let new_bag: HashSet<i32> =
+                        bag.iter().copied().filter(|&v| v > adapt).collect();
+                    self.count_chains_internal(new_last, new_bag)
+                });
             // return sum of all valid chains (will be 0 if there are none)
             valid_chains.sum()
         }
