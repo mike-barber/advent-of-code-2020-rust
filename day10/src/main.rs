@@ -54,34 +54,34 @@ impl AdaptersProblem {
     }
 
     fn count_chains(&self) -> i32 {
-        let bag: HashSet<i32> = self.adapters.iter().copied().collect();
-        self.count_chains_internal(0, bag)
+        let mut bag: Vec<i32> = self.adapters.iter().copied().collect();
+        bag.sort();
+        self.count_chains_internal(0, 0, &bag)
     }
 
     // need to use the adapters to reach the target voltage; not necessary to use all of them
-    fn count_chains_internal(&self, last: i32, bag: HashSet<i32>) -> i32 {
+    fn count_chains_internal(&self, last: i32, start_index:usize, bag: &[i32]) -> i32 {
         if last + 3 == self.final_joltage {
             // we've hit our target; this chain terminates valid
             1
         } else {
-            // find all adapters that can connect to the end of the existing chain
-            // recursively consider options
-            let valid_chains = bag
-                .iter()
-                .filter(|&&adapt| {
-                    let diff = adapt - last;
-                    diff >= 1 && diff <= 3
-                })
-                .map(|&adapt| {
-                    // create new chain
-                    let new_last = adapt;
-                    // aggressively trim adapters that are not viable for the next iteration
-                    let new_bag: HashSet<i32> =
-                        bag.iter().copied().filter(|&v| v > adapt).collect();
-                    self.count_chains_internal(new_last, new_bag)
-                });
-            // return sum of all valid chains (will be 0 if there are none)
-            valid_chains.sum()
+            let mut sum = 0;
+            for current in start_index..bag.len() {
+                let adapt = bag[current];
+                let diff = adapt - last;
+                // if diff < 1 {
+                //     // check
+                //     panic!("diff {} == {} - {}", diff, adapt, last);
+                // }
+                if diff <= 3 {
+                    // recursively count viable options
+                    sum += self.count_chains_internal(adapt, current+1, bag);
+                } else {
+                    // no use considering higher values -- they're all unviable
+                    break;
+                }
+            }
+            sum
         }
     }
 }
