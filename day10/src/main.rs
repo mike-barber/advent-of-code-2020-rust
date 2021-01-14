@@ -1,9 +1,4 @@
-use std::{
-    collections::HashSet,
-    error::Error,
-    fs::File,
-    io::{BufRead, BufReader},
-};
+use std::{collections::{HashMap, HashSet}, error::Error, fs::File, io::{BufRead, BufReader}};
 
 struct AdaptersProblem {
     adapters: Vec<i32>,
@@ -53,19 +48,20 @@ impl AdaptersProblem {
         }
     }
 
-    fn count_chains(&self) -> i32 {
+    fn count_chains(&self) -> i64 {
         let mut bag: Vec<i32> = self.adapters.iter().copied().collect();
         bag.sort();
-        self.count_chains_internal(0, 0, &bag)
+        let mut cache = HashMap::new();
+        self.count_chains_internal(0, 0, &bag, &mut cache)
     }
 
     // need to use the adapters to reach the target voltage; not necessary to use all of them
-    fn count_chains_internal(&self, last: i32, start_index:usize, bag: &[i32]) -> i32 {
+    fn count_chains_internal(&self, last: i32, start_index:usize, bag: &[i32], cache: &mut HashMap<i32, i64>) -> i64 {
         if last + 3 == self.final_joltage {
             // we've hit our target; this chain terminates valid
             1
         } else {
-            let mut sum = 0;
+            let mut sum = 0i64;
             for current in start_index..bag.len() {
                 let adapt = bag[current];
                 let diff = adapt - last;
@@ -74,8 +70,15 @@ impl AdaptersProblem {
                 //     panic!("diff {} == {} - {}", diff, adapt, last);
                 // }
                 if diff <= 3 {
-                    // recursively count viable options
-                    sum += self.count_chains_internal(adapt, current+1, bag);
+                    // recursively count viable options, checking the cache first
+                    // simply return the result from the cache if available: we've already calculated it
+                    if let Some(cached) = cache.get(&adapt) {
+                        sum += *cached;
+                    } else {
+                        let count = self.count_chains_internal(adapt, current+1, bag, cache);
+                        cache.insert(adapt, count);
+                        sum += count;
+                    }
                 } else {
                     // no use considering higher values -- they're all unviable
                     break;
