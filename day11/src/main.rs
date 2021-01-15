@@ -89,13 +89,13 @@ impl SeatMap {
         for r in r0..=r1 {
             for c in c0..=c1 {
                 // ignore self
-                if r == row  && c == col {
+                if r == row && c == col {
                     continue;
                 }
                 // invalid addresses are None
                 if let Some(place) = self.get(r, c) {
                     if place == what {
-                        count += 1 
+                        count += 1
                     }
                 }
             }
@@ -103,16 +103,31 @@ impl SeatMap {
         count
     }
 
-    fn count_visible_direction(&self, row:i32, col:i32, row_delta: i32, col_delta: i32, what: &Place) -> usize {
+    fn count_visible_direction(
+        &self,
+        row: i32,
+        col: i32,
+        row_delta: i32,
+        col_delta: i32,
+        what: &Place,
+    ) -> usize {
         let mut count = 0;
         let mut r = row;
         let mut c = col;
+        // TODO: clean this up. 
         loop {
             r += row_delta;
             c += col_delta;
-            if let Some(place) = self.get(r,c) {
-                if place == what {
-                    count += 1
+            if let Some(place) = self.get(r, c) {
+                if place == &Place::Floor {
+                    // look over floor
+                    continue;
+                } else {
+                    // stop at first chair
+                    if place == what {
+                        count = 1
+                    }
+                    break;
                 }
             } else {
                 // reached end
@@ -139,7 +154,7 @@ impl SeatMap {
         self.places.iter().filter(|&p| p == what).count()
     }
 
-    fn evolve(&self) -> Self {
+    fn evolve_part1_adjacent(&self) -> Self {
         let mut map = self.clone();
         for r in 0..self.rows {
             for c in 0..self.cols {
@@ -167,6 +182,35 @@ impl SeatMap {
         }
         map
     }
+
+    fn evolve_part2_visible(&self) -> Self {
+        let mut map = self.clone();
+        for r in 0..self.rows {
+            for c in 0..self.cols {
+                let new_place = match self.get(r, c).unwrap() {
+                    Place::Floor => Place::Floor,
+                    Place::Vacant => {
+                        let count_occupied = self.count_visible(r, c, &Place::Occupied);
+                        if count_occupied == 0 {
+                            Place::Occupied
+                        } else {
+                            Place::Vacant
+                        }
+                    }
+                    Place::Occupied => {
+                        let count_occupied = self.count_visible(r, c, &Place::Occupied);
+                        if count_occupied >= 5 {
+                            Place::Vacant
+                        } else {
+                            Place::Occupied
+                        }
+                    }
+                };
+                *map.get_mut(r, c).unwrap() = new_place;
+            }
+        }
+        map
+    }
 }
 
 fn main() -> Result<(), Box<dyn Error>> {
@@ -176,18 +220,38 @@ fn main() -> Result<(), Box<dyn Error>> {
     let seat_map = SeatMap::parse_from_strings(lines)?;
     seat_map.print();
 
-    let mut map = seat_map.clone();
-    loop {
-        let new_map = map.evolve();
-        new_map.print();
-        if new_map == map {
-            println!(
-                "Complete with {} places occupied",
-                new_map.count(&Place::Occupied)
-            );
-            break;
+    // part 1
+    {
+        let mut map = seat_map.clone();
+        loop {
+            let new_map = map.evolve_part1_adjacent();
+            new_map.print();
+            if new_map == map {
+                println!(
+                    "Complete with {} places occupied",
+                    new_map.count(&Place::Occupied)
+                );
+                break;
+            }
+            map = new_map;
         }
-        map = new_map;
+    }
+
+    // part 2
+    {
+        let mut map = seat_map.clone();
+        loop {
+            let new_map = map.evolve_part2_visible();
+            new_map.print();
+            if new_map == map {
+                println!(
+                    "Complete with {} places occupied",
+                    new_map.count(&Place::Occupied)
+                );
+                break;
+            }
+            map = new_map;
+        }
     }
 
     Ok(())
