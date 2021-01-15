@@ -116,6 +116,48 @@ impl State {
     }
 }
 
+// for part 2 -- where we move a waypoint (vector) around, and move the ship
+//               in the vector's direction.
+#[derive(Debug, Clone)]
+struct StateWaypoint {
+    location: Coord,
+    waypoint: Coord,
+}
+impl StateWaypoint {
+    fn apply_instruction(&self, instruction: &Instruction) -> Self {
+        match *instruction {
+            Instruction::N(v) => Self {
+                waypoint: self.waypoint + Coord(0, v),
+                ..*self
+            },
+            Instruction::E(v) => Self {
+                waypoint: self.waypoint + Coord(v, 0),
+                ..*self
+            },
+            Instruction::S(v) => Self {
+                waypoint: self.waypoint + Coord(0, -v),
+                ..*self
+            },
+            Instruction::W(v) => Self {
+                waypoint: self.waypoint + Coord(-v, 0),
+                ..*self
+            },
+            Instruction::L(v) => Self {
+                waypoint: self.waypoint.left(v),
+                ..*self
+            },
+            Instruction::R(v) => Self {
+                waypoint: self.waypoint.right(v),
+                ..*self
+            },
+            Instruction::F(v) => Self {
+                location: self.location + self.waypoint * v,
+                ..*self
+            },
+        }
+    }
+}
+
 fn main() -> Result<(), Box<dyn Error>> {
     let buffered = BufReader::new(File::open("day12/input.txt")?);
     let instructions: Result<Vec<_>, _> = buffered
@@ -131,9 +173,29 @@ fn main() -> Result<(), Box<dyn Error>> {
         location: Coord(0, 0),
         direction: Coord(1, 0),
     };
-    let result = instructions.iter().fold(initial_state, |state,i| state.apply_instruction(i));
+    let result = instructions
+        .iter()
+        .fold(initial_state, |state, i| state.apply_instruction(i));
     println!("Result: {:?}", result);
-    println!("Manhattan distance: {:?}", result.location.0.abs() + result.location.1.abs());
+    println!(
+        "Manhattan distance: {:?}",
+        result.location.0.abs() + result.location.1.abs()
+    );
+
+    let initial_state_waypoint = StateWaypoint {
+        location: Coord(0, 0),
+        waypoint: Coord(10, 1),
+    };
+    let result_waypoint = instructions
+        .iter()
+        .fold(initial_state_waypoint, |state, i| {
+            state.apply_instruction(i)
+        });
+    println!("Result: {:?}", result_waypoint);
+    println!(
+        "Manhattan distance: {:?}",
+        result_waypoint.location.0.abs() + result_waypoint.location.1.abs()
+    );
 
     Ok(())
 }
