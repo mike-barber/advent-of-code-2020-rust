@@ -74,12 +74,16 @@ impl SeatMap {
 
     fn count_adjacent(&self, row: usize, col: usize, what: &Place) -> usize {
         let r0 = row.checked_sub(1).unwrap_or(0);
-        let r1 = (row + 1).min(self.rows);
+        let r1 = (row + 1).min(self.rows - 1);
         let c0 = col.checked_sub(1).unwrap_or(0);
-        let c1 = (col + 1).min(self.cols);
+        let c1 = (col + 1).min(self.cols - 1);
         let mut count = 0;
-        for r in r0..r1 {
-            for c in c0..c1 {
+        for r in r0..=r1 {
+            for c in c0..=c1 {
+                // ignore self
+                if r==row && c == col {
+                    continue;
+                }
                 if self.get(r, c) == what {
                     count += 1
                 }
@@ -88,7 +92,7 @@ impl SeatMap {
         count
     }
 
-    fn count(&self, what:&Place) -> usize {
+    fn count(&self, what: &Place) -> usize {
         self.places.iter().filter(|&p| p == what).count()
     }
 
@@ -123,7 +127,7 @@ impl SeatMap {
 }
 
 fn main() -> Result<(), Box<dyn Error>> {
-    let buffered = BufReader::new(File::open("example-input.txt")?);
+    let buffered = BufReader::new(File::open("day11/input.txt")?);
     let lines = buffered.lines().map(|l| l.unwrap()).collect();
 
     let seat_map = SeatMap::parse_from_strings(lines)?;
@@ -134,7 +138,10 @@ fn main() -> Result<(), Box<dyn Error>> {
         let new_map = map.evolve();
         new_map.print();
         if new_map == map {
-            println!("Complete with {} places occupied", new_map.count(&Place::Occupied));
+            println!(
+                "Complete with {} places occupied",
+                new_map.count(&Place::Occupied)
+            );
             break;
         }
         map = new_map;
