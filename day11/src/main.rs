@@ -23,8 +23,8 @@ impl Place {
 #[derive(Debug, Clone, PartialEq)]
 struct SeatMap {
     places: Vec<Place>,
-    rows: usize,
-    cols: usize,
+    rows: i32,
+    cols: i32,
 }
 impl SeatMap {
     fn parse_from_strings(source: Vec<String>) -> Result<Self, String> {
@@ -32,8 +32,8 @@ impl SeatMap {
         let rows = source.len();
         let mut map = SeatMap {
             places: vec![Place::Floor; rows * cols],
-            rows,
-            cols,
+            rows: rows as i32,
+            cols: cols as i32,
         };
 
         for (row, line) in source.iter().enumerate() {
@@ -52,7 +52,9 @@ impl SeatMap {
 
     fn print(&self) {
         for r in 0..self.rows {
-            let line: String = (0..self.cols).map(|c| self.get(r as i32, c as i32).unwrap().char()).collect();
+            let line: String = (0..self.cols)
+                .map(|c| self.get(r, c).unwrap().char())
+                .collect();
             println!("{}", line);
         }
         println!("---");
@@ -68,30 +70,33 @@ impl SeatMap {
         Some(&self.places[idx])
     }
 
-    fn addr(&self, row: i32, col:i32) -> Option<usize> {
+    fn addr(&self, row: i32, col: i32) -> Option<usize> {
         if row < 0 || col < 0 {
-            return None
+            return None;
         }
-        if row as usize >= self.rows || col as usize >= self.rows {
-            return None
-        }        
-        Some(col as usize + row as usize * self.cols)
+        if row >= self.rows || col >= self.cols {
+            return None;
+        }
+        Some(col as usize + row as usize * self.cols as usize)
     }
 
-    fn count_adjacent(&self, row: usize, col: usize, what: &Place) -> usize {
-        let r0 = row.checked_sub(1).unwrap_or(0);
-        let r1 = (row + 1).min(self.rows - 1);
-        let c0 = col.checked_sub(1).unwrap_or(0);
-        let c1 = (col + 1).min(self.cols - 1);
+    fn count_adjacent(&self, row: i32, col: i32, what: &Place) -> usize {
+        let r0 = row - 1;
+        let r1 = row + 1;
+        let c0 = col - 1;
+        let c1 = col + 1;
         let mut count = 0;
         for r in r0..=r1 {
             for c in c0..=c1 {
                 // ignore self
-                if r==row && c == col {
+                if r == row  && c == col {
                     continue;
                 }
-                if self.get(r as i32, c as i32).unwrap() == what {
-                    count += 1
+                // invalid addresses are None
+                if let Some(place) = self.get(r, c) {
+                    if place == what {
+                        count += 1 
+                    }
                 }
             }
         }
@@ -106,7 +111,7 @@ impl SeatMap {
         let mut map = self.clone();
         for r in 0..self.rows {
             for c in 0..self.cols {
-                let new_place = match self.get(r as i32, c as i32).unwrap() {
+                let new_place = match self.get(r, c).unwrap() {
                     Place::Floor => Place::Floor,
                     Place::Vacant => {
                         let count_occupied = self.count_adjacent(r, c, &Place::Occupied);
@@ -125,7 +130,7 @@ impl SeatMap {
                         }
                     }
                 };
-                *map.get_mut(r as i32, c as i32).unwrap() = new_place;
+                *map.get_mut(r, c).unwrap() = new_place;
             }
         }
         map
