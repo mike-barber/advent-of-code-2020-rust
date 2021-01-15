@@ -38,7 +38,7 @@ impl SeatMap {
 
         for (row, line) in source.iter().enumerate() {
             for (col, char) in line.chars().enumerate() {
-                let elem = map.get_mut(row, col);
+                let elem = map.get_mut(row as i32, col as i32).unwrap();
                 *elem = match char {
                     'L' => Place::Vacant,
                     '#' => Place::Occupied,
@@ -52,24 +52,30 @@ impl SeatMap {
 
     fn print(&self) {
         for r in 0..self.rows {
-            let line: String = (0..self.cols).map(|c| self.get(r, c).char()).collect();
+            let line: String = (0..self.cols).map(|c| self.get(r as i32, c as i32).unwrap().char()).collect();
             println!("{}", line);
         }
         println!("---");
     }
 
-    fn get_mut(&mut self, row: usize, col: usize) -> &mut Place {
-        let idx = self.addr(row, col);
-        &mut self.places[idx]
+    fn get_mut(&mut self, row: i32, col: i32) -> Option<&mut Place> {
+        let idx = self.addr(row, col)?;
+        Some(&mut self.places[idx])
     }
 
-    fn get(&self, row: usize, col: usize) -> &Place {
-        let idx = self.addr(row, col);
-        &self.places[idx]
+    fn get(&self, row: i32, col: i32) -> Option<&Place> {
+        let idx = self.addr(row, col)?;
+        Some(&self.places[idx])
     }
 
-    fn addr(&self, row: usize, col: usize) -> usize {
-        col + row * self.cols
+    fn addr(&self, row: i32, col:i32) -> Option<usize> {
+        if row < 0 || col < 0 {
+            return None
+        }
+        if row as usize >= self.rows || col as usize >= self.rows {
+            return None
+        }        
+        Some(col as usize + row as usize * self.cols)
     }
 
     fn count_adjacent(&self, row: usize, col: usize, what: &Place) -> usize {
@@ -84,7 +90,7 @@ impl SeatMap {
                 if r==row && c == col {
                     continue;
                 }
-                if self.get(r, c) == what {
+                if self.get(r as i32, c as i32).unwrap() == what {
                     count += 1
                 }
             }
@@ -100,7 +106,7 @@ impl SeatMap {
         let mut map = self.clone();
         for r in 0..self.rows {
             for c in 0..self.cols {
-                let new_place = match self.get(r, c) {
+                let new_place = match self.get(r as i32, c as i32).unwrap() {
                     Place::Floor => Place::Floor,
                     Place::Vacant => {
                         let count_occupied = self.count_adjacent(r, c, &Place::Occupied);
@@ -119,7 +125,7 @@ impl SeatMap {
                         }
                     }
                 };
-                *map.get_mut(r, c) = new_place;
+                *map.get_mut(r as i32, c as i32).unwrap() = new_place;
             }
         }
         map
