@@ -103,6 +103,38 @@ impl SeatMap {
         count
     }
 
+    fn count_visible_direction(&self, row:i32, col:i32, row_delta: i32, col_delta: i32, what: &Place) -> usize {
+        let mut count = 0;
+        let mut r = row;
+        let mut c = col;
+        loop {
+            r += row_delta;
+            c += col_delta;
+            if let Some(place) = self.get(r,c) {
+                if place == what {
+                    count += 1
+                }
+            } else {
+                // reached end
+                break;
+            }
+        }
+        count
+    }
+
+    fn count_visible(&self, row: i32, col: i32, what: &Place) -> usize {
+        let mut total = 0;
+        for rd in -1..=1 {
+            for cd in -1..=1 {
+                if rd == 0 && cd == 0 {
+                    continue;
+                }
+                total += self.count_visible_direction(row, col, rd, cd, what);
+            }
+        }
+        total
+    }
+
     fn count(&self, what: &Place) -> usize {
         self.places.iter().filter(|&p| p == what).count()
     }
