@@ -45,7 +45,8 @@ fn main() -> Result<(), Box<dyn Error>> {
         println!("-----");
     }
 
-    // Part 2
+    // Part 2 with LCM -- brute linear search proved infeasible and I needed to take a more iterative
+    // approach. Divide and conquer. As per notes.txt.
     {
         // get ids and offsets
         let mut id_offset: Vec<_> = ids
@@ -56,73 +57,32 @@ fn main() -> Result<(), Box<dyn Error>> {
         id_offset.sort_by_key(|(id, _offset)| *id);
         id_offset.reverse();
 
-        // aligned vectors of ids and offsets
-        let effective_ids: Vec<i64> = id_offset.iter().map(|(id, _offset)| *id).collect();
-        let offsets: Vec<i64> = id_offset.iter().map(|(_id, offset)| *offset).collect();
-        // sort largest to smallest on id -- we'll use the largest ID as the stride
-        println!("ids:     {:?}", &effective_ids);
-        println!("offsets: {:?}", &offsets);
-
-        let stride = effective_ids[0];
-        let first_time = effective_ids[0] - offsets[0];
-        println!("first time: {}, stride: {}", first_time, stride);
-
-        // relying on the compiler to do some nice vectorisation here, rather than
-        // testing every bus.
-        let mut residuals = vec![0i64; effective_ids.len()];
-        let mut t_now = first_time;
-        loop {
-            residuals
-                .iter_mut()
-                .zip(&effective_ids)
-                .zip(&offsets)
-                .for_each(|((res, id), off)| {
-                    let t_bus = t_now + off;
-                    *res = t_bus % id;
-                });
-
-            if residuals.iter().all(|r| *r == 0) {
-                println!("Found time: {}", t_now);
-                break;
-            }
-            t_now += stride;
+        // locate the next number in the sequence [start + N*stride] that matches some [M*id + offset].
+        fn find_next_number(start: i64, stride: i64, id: i64, offset: i64) -> i64 {
+            itertools::iterate(start, |v| v + stride)
+                .find(|v| (v + offset) % id == 0)
+                .unwrap()
         }
-    }
 
-    // Part 2 - second attempt
-    {
-        let id_offset: Vec<_> = ids
+        // now iteratively include the busses, starting with the first bus; work out the lowest common multiplier
+        // as the required stride for each next search.
+        let starts: Vec<_> = id_offset
             .iter()
-            .enumerate()
-            .filter_map(|(idx, v)| v.map(|v| (v, idx as i64)))
+            .scan((0i64, 1i64), |(start, stride), (id, offset)| {
+                let next = find_next_number(*start, *stride, *id, *offset);
+                let next_stride = num::Integer::lcm(stride, id);
+                println!(
+                    "id {} offset {} start {} stride {} -> next {} next_stride {}",
+                    id, offset, start, stride, next, next_stride
+                );
+                *start = next;
+                *stride = next_stride;
+                Some(next)
+            })
             .collect();
 
-        let mut t_now = 0;
-        loop {
-            // find first possible next bus time
-            let t_next_possible = id_offset
-                .iter()
-                .map(|(id, offset)| {
-                    let t = t_now + offset;
-                    let t_next = (t / id + 1) * id - offset;
-                    //println!("t_next {} for id {} offset {}", t_next, id, offset);
-                    t_next
-                })
-                .max()
-                .unwrap();
-
-            //println!("next: {} (delta +{})", t_next_possible, t_next_possible-t_now);
-
-            // check if it matches all the busses
-            t_now = t_next_possible;
-            if id_offset.iter().all(|(id, offset)| {
-                let t_effective = t_now + offset;
-                t_effective % id == 0
-            }) {
-                println!("Found time: {}", t_now);
-                break;
-            }
-        }
+        println!("Starts: {:?}", starts);
+        println!("Earliest time for all busses: {}", starts.last().unwrap());
     }
 
     Ok(())

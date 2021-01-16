@@ -6,3 +6,18 @@ find t such that:
 (t + o2) % i2 = 0
 (t + o3) % i3 = 0
 ..
+
+
+Okay, so a linear search from t=0 is infeasible. 
+However, you can take strides == i1, since 
+next matching t will be at least i1 away the previous.
+
+But once you have i1 and i2, locked in, it stands to 
+reason that the next feasible number will at least 
+i1 and i2 away: but actually the lowest common multiple 
+of these. 
+
+Once that's locked in, we need lcm(i1,i2,i3) as the next step 
+size.
+
+etc.
