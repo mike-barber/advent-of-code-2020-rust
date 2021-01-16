@@ -35,7 +35,8 @@ struct NumberSpoken {
 fn main() {
     //let starting_numbers = [0, 3, 6];
     let starting_numbers = [16,11,15,0,1,7];
-    let rounds = 2020i32;
+    //let rounds = 2020i32;
+    let rounds = 30000000;
 
     let mut memory: HashMap<i32, NumberSpoken> = HashMap::new();
     let mut last_number_spoken = 0;
@@ -68,6 +69,7 @@ fn main() {
         }
         // record last number spoken
         last_number_spoken = num;
-        println!("round {} -> num {}", round, num);
+        //println!("round {} -> num {}", round, num);
     }
+    println!("last number: {}", last_number_spoken);
 }
