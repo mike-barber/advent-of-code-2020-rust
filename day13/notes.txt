@@ -8,7 +8,9 @@ find t such that:
 ..
 
 
-Okay, so a linear search from t=0 is infeasible. 
+Okay, so a linear search from t=0 is infeasible. Despite trying 
+3 different approaches. This took a while.
+
 However, you can take strides == i1, since 
 next matching t will be at least i1 away the previous.
 
