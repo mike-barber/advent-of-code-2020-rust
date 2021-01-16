@@ -9,6 +9,10 @@ use std::{
 use anyhow::{anyhow, bail, Result};
 use regex::Regex;
 
+lazy_static::lazy_static! {
+    static ref RE_MASK: Regex = Regex::new(r"mask = ([01X]+)").unwrap();
+}
+
 // mask = XXXXXXXXXXXXXXXXXXXXXXXXXXXXX1XXXX0X
 #[derive(Debug, Clone, Copy)]
 struct Mask {
@@ -19,9 +23,6 @@ impl Mask {
     fn apply(&self, value: u64) -> u64 {
         value & !self.reset | self.set
     }
-}
-lazy_static::lazy_static! {
-    static ref RE_MASK: Regex = Regex::new(r"mask = ([01X]+)").unwrap();
 }
 impl FromStr for Mask {
     type Err = anyhow::Error;
@@ -48,6 +49,91 @@ impl FromStr for Mask {
 impl Display for Mask {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "mask set: {:b}, reset: {:b}", self.set, self.reset)
+    }
+}
+
+// mask = XXXXXXXXXXXXXXXXXXXXXXXXXXXXX1XXXX0X
+// for part 2,
+// 0 -> unchanged
+// 1 -> set to 1
+// X -> floating, permitted to take all values
+#[derive(Debug, Clone)]
+struct MaskAddress {
+    set_mask: u64,
+    floating_bits: Vec<u8>,
+}
+
+impl MaskAddress {
+    fn addresses_iter(&self, address: u64) -> MaskAddressIterator {
+        MaskAddressIterator {
+            floating_bit_values: 0u64,
+            floating_bit_last: (1u64 << self.floating_bits.len()) - 1,
+            completed: false,
+            mask_address: &self,
+            address,
+        }
+    }
+}
+impl FromStr for MaskAddress {
+    type Err = anyhow::Error;
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        let captures = RE_MASK.captures(s).ok_or(anyhow!("invalid format"))?;
+        let mut set_mask = 0u64;
+        let mut floating_bits = Vec::new();
+        for (i, c) in captures[1].chars().enumerate() {
+            let loc = 35_u64 - i as u64;
+            match c {
+                'X' => floating_bits.push(loc as u8),
+                '1' => set_mask |= 1u64 << loc,
+                '0' => (),
+                _ => return Err(anyhow!("Invalid bit spec: {}", c)),
+            };
+        }
+        // ensure floating bit addresses are sorted smallest to largest
+        floating_bits.sort();
+        Ok(MaskAddress {
+            set_mask,
+            floating_bits,
+        })
+    }
+}
+
+struct MaskAddressIterator<'a> {
+    floating_bit_values: u64,
+    floating_bit_last: u64,
+    completed: bool,
+    mask_address: &'a MaskAddress,
+    address: u64,
+}
+impl<'a> Iterator for MaskAddressIterator<'a> {
+    type Item = u64;
+    fn next(&mut self) -> Option<Self::Item> {
+        if self.completed {
+            return None;
+        }
+
+        // take address, apply set mask
+        let mut addr = self.address;
+        addr |= self.mask_address.set_mask;
+
+        // now extract bits from floating_bit_values and place them in the address
+        let mut shift_extract = self.floating_bit_values;
+        for loc in self.mask_address.floating_bits.iter() {
+            // reset bit in address, then extract and apply our bit
+            addr &= !(1u64 << loc);
+            addr |= (shift_extract & 1) << loc;
+            // shift right, ditching last bit
+            shift_extract >>= 1;
+        }
+
+        // increment out counter
+        if self.floating_bit_values == self.floating_bit_last {
+            self.completed = true;
+        } else {
+            self.floating_bit_values += 1;
+        }
+
+        Some(addr)
     }
 }
 
@@ -84,13 +170,13 @@ fn main() -> Result<()> {
         let l = lr?;
         if l.contains("mask") {
             mask = l.parse()?;
-            println!("Mask: {}", &mask);
+        //println!("Mask: {}", &mask);
         } else if l.contains("mem") {
             let instruction: Instruction = l.parse()?;
             let value_masked = mask.apply(instruction.value);
             memory.insert(instruction.addr, value_masked);
-            println!("Instruction: {:?}", instruction);
-            println!("Memory {:?}", memory);
+        //println!("Instruction: {:?}", instruction);
+        //println!("Memory {:?}", memory);
         } else {
             bail!("Invalid instruction");
         }
@@ -130,5 +216,30 @@ mod tests {
         let inst: Instruction = "mem[8] = 11".parse().unwrap();
         assert_eq!(8, inst.addr);
         assert_eq!(11, inst.value);
+    }
+
+    #[test]
+    fn mask_address_iterate() {
+        //let mask: MaskAddress = "mask = 000000000000000000000000000XX0010XXX".parse()?;
+        let mask: MaskAddress = "mask = 000000000000000000000000000000000XXX"
+            .parse()
+            .unwrap();
+        // all floating, should replace all of these with iterated values
+        itertools::assert_equal(0u64..=0b111, mask.addresses_iter(0b000));
+        itertools::assert_equal(0u64..=0b111, mask.addresses_iter(0b101));
+        itertools::assert_equal(0u64..=0b111, mask.addresses_iter(0b111));
+    }
+
+    #[test]
+    fn mask_address_set_and_iterate() {
+        let mask: MaskAddress = "mask = 00000000000000000000000000010000000X"
+            .parse()
+            .unwrap();
+        // all floating, should replace all of these with iterated values
+        let addr = 0xF000;
+        itertools::assert_equal(
+            [addr + 256, addr + 256 + 1].iter().copied(),
+            mask.addresses_iter(addr),
+        );
     }
 }
