@@ -160,30 +160,60 @@ impl FromStr for Instruction {
 }
 
 fn main() -> Result<()> {
-    let buffered = BufReader::new(File::open("day14/input.txt")?);
-
-    let mut mask: Mask = "mask = XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
-        .parse()
-        .unwrap();
-    let mut memory: HashMap<u64, u64> = HashMap::new();
-    for lr in buffered.lines() {
-        let l = lr?;
-        if l.contains("mask") {
-            mask = l.parse()?;
-        //println!("Mask: {}", &mask);
-        } else if l.contains("mem") {
-            let instruction: Instruction = l.parse()?;
-            let value_masked = mask.apply(instruction.value);
-            memory.insert(instruction.addr, value_masked);
-        //println!("Instruction: {:?}", instruction);
-        //println!("Memory {:?}", memory);
-        } else {
-            bail!("Invalid instruction");
+    let lines = {
+        let buffered = BufReader::new(File::open("day14/input.txt")?);
+        let mut lines = Vec::new();
+        for l in buffered.lines() {
+            lines.push(l?);
         }
+        lines
+    };
+
+    // part 1
+    {
+        println!("Part 1 ------");
+        let mut mask: Mask = "mask = XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
+            .parse()
+            .unwrap();
+        let mut memory: HashMap<u64, u64> = HashMap::new();
+        for l in lines.iter() {
+            if l.contains("mask") {
+                mask = l.parse()?;
+            //println!("Mask: {}", &mask);
+            } else if l.contains("mem") {
+                let instruction: Instruction = l.parse()?;
+                let value_masked = mask.apply(instruction.value);
+                memory.insert(instruction.addr, value_masked);
+            //println!("Instruction: {:?}", instruction);
+            //println!("Memory {:?}", memory);
+            } else {
+                bail!("Invalid instruction");
+            }
+        }
+        let memory_sum: u64 = memory.values().sum();
+        println!("Sum of memory: {}", memory_sum);
     }
 
-    let memory_sum: u64 = memory.values().sum();
-    println!("Sum of memory: {}", memory_sum);
+    // part 2
+    {
+        println!("Part 2 ------");
+        let mut memory: HashMap<u64, u64> = HashMap::new();
+        let mut mask: Option<MaskAddress> = None;
+        for l in lines.iter() {
+            if l.contains("mask") {
+                mask = Some(l.parse()?);
+            } else if l.contains("mem") {
+                let instruction: Instruction = l.parse()?;
+                let addr_mask = mask.as_ref().ok_or(anyhow!("mask not set yet"))?;
+                for addr in addr_mask.addresses_iter(instruction.addr) {
+                    memory.insert(addr, instruction.value);
+                }
+            }
+        }
+        println!("Set {} total memory addresses", memory.len());
+        let memory_sum: u64 = memory.values().sum();
+        println!("Sum of memory: {}", memory_sum);
+    }
 
     Ok(())
 }
