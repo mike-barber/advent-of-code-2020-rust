@@ -19,23 +19,58 @@ fn main() -> Result<(), Box<dyn Error>> {
         })
         .collect();
 
-    println!("Earliest: {}, IDs: {:?}", &earliest, &ids);
-
-    let mut next: Vec<_> = ids
-        .iter()
-        .filter_map(|ido| {
-            ido.map(|id| {
-                let next = (earliest / id + 1) * id;
-                (id, next)
+    // Part 1 
+    {
+        println!("Earliest: {}, IDs: {:?}", &earliest, &ids);
+        let mut next: Vec<_> = ids
+            .iter()
+            .filter_map(|ido| {
+                ido.map(|id| {
+                    let next = (earliest / id + 1) * id;
+                    (id, next)
+                })
             })
-        })
-        .collect();
-    next.sort_by_key(|(_, t)| *t);
-    println!("Next busses: {:?}", next);
+            .collect();
+        next.sort_by_key(|(_, t)| *t);
+        println!("Next busses: {:?}", next);
 
-    let (next_id, next_time) = next.first().ok_or("no bus")?;
-    let wait = next_time - earliest;
-    println!("Next bus is {}, time is {}, id*wait = {}", next_id, next_time, next_id * wait);
+        let (next_id, next_time) = next.first().ok_or("no bus")?;
+        let wait = next_time - earliest;
+        println!(
+            "Next bus is {}, time is {}, id*wait = {}",
+            next_id,
+            next_time,
+            next_id * wait
+        );
+        println!("-----");
+    }
+    
+    // Part 2 
+    {
+        // aligned vectors of ids and offsets
+        let effective_ids:Vec<i64> = ids.iter().filter_map(|x| *x).collect();
+        let offsets:Vec<i64> = ids.iter().enumerate().filter_map(|(idx,b)| b.map(|_| idx as i64)).collect();
+        println!("ids:     {:?}", &effective_ids);
+        println!("offsets: {:?}", &offsets);
+        let stride = effective_ids[0];
+
+        // relying on the compiler to do some nice vectorisation here, rather than 
+        // testing every bus. 
+        let mut residuals = vec![0i64; effective_ids.len()];
+        let mut t_now = 0;
+        loop {
+            residuals.iter_mut().zip(&effective_ids).zip(&offsets).for_each(|((res,id),off)| {
+                let t_bus = t_now + off;
+                *res = t_bus % id;
+            });
+            if residuals.iter().all(|r| *r == 0) {
+                println!("Found time: {}", t_now);
+                break;
+            }
+            t_now += stride;
+        }
+
+    }
 
     Ok(())
 }
