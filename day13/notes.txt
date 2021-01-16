@@ -1,8 +1,8 @@
 part 2
 
+find t such that: 
+
 (t + o1) % i1 = 0
 (t + o2) % i2 = 0
 (t + o3) % i3 = 0
 ..
-
-
