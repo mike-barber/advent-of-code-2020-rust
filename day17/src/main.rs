@@ -69,7 +69,7 @@ impl Coord for Coord3 {
         let here = self.clone();
         let skip = vec![0, 0, 0];
         let ii = (0..3)
-            .map(|_| -1..1)
+            .map(|_| -1..=1)
             .multi_cartesian_product()
             .filter(move |v| v != &skip)
             .map(move |v| Coord3(v[0], v[1], v[2]) + here);
@@ -107,7 +107,7 @@ impl Coord for Coord4 {
         let here = self.clone();
         let skip = vec![0, 0, 0, 0];
         let ii = (0..4)
-            .map(|_| -1..1)
+            .map(|_| -1..=1)
             .multi_cartesian_product()
             .filter(move |v| v != &skip)
             .map(move |v| Coord4(v[0], v[1], v[2], v[3]) + here);
@@ -266,7 +266,7 @@ impl RangeExpand for RangeInclusive<i32> {
 }
 
 fn main() -> Result<()> {
-    let problem_str = std::fs::read_to_string("day17/example-input.txt")?;
+    let problem_str = std::fs::read_to_string("day17/input.txt")?;
     let init_grid: Grid<Coord3> = problem_str.parse()?;
     println!("Grid: {:?}", init_grid);
 
