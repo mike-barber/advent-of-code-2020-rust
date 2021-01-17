@@ -131,8 +131,11 @@ fn find_field_numbers_possible(field_spec: &FieldSpec, valid_tickets: &[Ticket])
     matches
 }
 
-fn skip_nth_value<T>(source: impl Iterator<Item = T>, n:usize) -> impl Iterator<Item = T> {
-    source.enumerate().filter(move |(i,_v)| *i != n).map(|(_i,v)| v)
+fn skip_nth_value<T>(source: impl Iterator<Item = T>, n: usize) -> impl Iterator<Item = T> {
+    source
+        .enumerate()
+        .filter(move |(i, _v)| *i != n)
+        .map(|(_i, v)| v)
 }
 
 fn main() -> Result<()> {
@@ -195,11 +198,9 @@ fn main() -> Result<()> {
                 let set = &sets[i];
                 set.iter()
                     .find(|&v| {
-                        sets.iter()
-                            // skip self (checking the _reference_, not values)
-                            .filter(|&s| !std::ptr::eq(s, set))
-                            // no other sets contain this value
-                            .all(|s| !s.contains(v))
+                        // skip self (checking the _reference_, not values)
+                        // no other sets contain this value
+                        skip_nth_value(sets.iter(), i).all(|s| !s.contains(v))
                     })
                     .copied() // needed to break reference (borrow checker)
             };
