@@ -1,11 +1,7 @@
-use anyhow::{anyhow, bail, Result};
+use anyhow::{anyhow, Result};
 use lazy_static::lazy_static;
 use regex::Regex;
-use std::{
-    ops::{Range, RangeInclusive},
-    str::FromStr,
-    todo,
-};
+use std::{ops::RangeInclusive, str::FromStr};
 
 #[derive(Debug, Clone)]
 struct FieldRange(Vec<RangeInclusive<i32>>);
@@ -14,7 +10,7 @@ impl FieldRange {
         FieldRange(ranges)
     }
     fn contains(&self, v: &i32) -> bool {
-        self.0.iter().all(|r| r.contains(v))
+        self.0.iter().any(|r| r.contains(v))
     }
 }
 
@@ -70,6 +66,16 @@ struct Problem {
     nearby_tickets: Vec<Ticket>,
 }
 
+impl Problem {
+    fn ticket_invalid_fields<'a>(&'a self, ticket: &'a Ticket) -> impl Iterator<Item = &i32> + 'a {
+        let field_specs = &self.field_specs;
+        ticket
+            .0
+            .iter()
+            .filter(move |f| !field_specs.iter().any(|fs| fs.ranges.contains(f)))
+    }
+}
+
 impl FromStr for Problem {
     type Err = anyhow::Error;
 
@@ -112,9 +118,21 @@ impl FromStr for Problem {
 }
 
 fn main() -> Result<()> {
-    let problem_str = std::fs::read_to_string("day16/example-input.txt")?;
+    let problem_str = std::fs::read_to_string("day16/input.txt")?;
     let problem: Problem = problem_str.parse()?;
     println!("Problem: {:?}", problem);
+
+    for t in problem.nearby_tickets.iter() {
+        let invalid_fields: Vec<_> = problem.ticket_invalid_fields(t).collect();
+        println!("invalid fields: {:?}", invalid_fields);
+    }
+
+    let ticket_scanning_error_rate:i32 = problem
+        .nearby_tickets
+        .iter()
+        .flat_map(|t| problem.ticket_invalid_fields(t))
+        .sum();
+    println!("ticket scanning error rate {}", ticket_scanning_error_rate);
 
     Ok(())
 }
