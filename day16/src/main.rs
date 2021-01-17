@@ -143,6 +143,9 @@ fn main() -> Result<()> {
     let problem: Problem = problem_str.parse()?;
     println!("Problem: {:?}", problem);
 
+    //
+    // Part 1
+    //
     println!("Part 1 ---");
     for t in problem.nearby_tickets.iter() {
         let invalid_fields: Vec<_> = problem.ticket_invalid_fields(t).collect();
@@ -155,6 +158,9 @@ fn main() -> Result<()> {
         .sum();
     println!("ticket scanning error rate {}", ticket_scanning_error_rate);
 
+    //
+    // Part 1
+    //
     println!("Part 2 ---");
     let valid_nearby: Vec<Ticket> = problem
         .nearby_tickets
@@ -164,24 +170,14 @@ fn main() -> Result<()> {
         .collect();
     println!("Valid nearby tickets: {:?}", valid_nearby);
 
-    // let field_spec = problem.field_specs.iter().find(|f| f.name == "seat").unwrap();
-    // let field_number = find_field_number_matching(field_spec, &valid_nearby).unwrap();
-    // println!("field: {}, value: {}", field_number, problem.ticket.0[field_number]);
-
-    let departure_fields: Vec<_> = problem
+    // find sets of fields that could match
+    let all_field_numbers: Vec<_> = problem
         .field_specs
         .iter()
-        .filter(|&f| f.name.contains("departure"))
-        .collect();
-    //let departure_fields: Vec<_> = problem.field_specs.iter().collect();
-
-    // find sets of fields that could match
-    let departure_field_numbers: Vec<_> = departure_fields
-        .iter()
-        .map(|&f| find_field_numbers_possible(f, &valid_nearby))
+        .map(|f| find_field_numbers_possible(f, &valid_nearby))
         .collect();
 
-    println!("Departure field numbers: {:?}", departure_field_numbers);
+    println!("All field numbers: {:?}", all_field_numbers);
 
     // now reduce each to a unique field -- one where we have only a single possible option
     // loop through all the field ranges
@@ -190,7 +186,7 @@ fn main() -> Result<()> {
     //  - repeat
     //  - stop when all sets contain only a single entry
     let mut finished = false;
-    let mut sets = departure_field_numbers.clone();
+    let mut sets = all_field_numbers.clone();
     while !finished {
         for i in 0..sets.len() {
             // find a number in this set that is unique
@@ -228,17 +224,27 @@ fn main() -> Result<()> {
         .iter()
         .map(|set| set.iter().nth(0).map(|nn| problem.ticket.0[*nn]))
         .collect();
+    let my_field_values = my_field_values.unwrap();
 
-    let product: i64 = my_field_values
-        .as_ref()
-        .ok_or(anyhow!("did not find all fields"))?
+    let departure_field_values: Vec<_> = problem
+        .field_specs
         .iter()
-        .map(|v| *v as i64)
-        .product();
+        .zip(my_field_values.iter())
+        .filter_map(|(fs, val)| {
+            if fs.name.contains("departure") {
+                Some(val)
+            } else {
+                None
+            }
+        })
+        .collect();
 
     println!("My field values: {:?}", &my_field_values);
+    println!("Departure field values: {:?}", &departure_field_values);
+
+    let product: i64 = departure_field_values.iter().map(|&v| *v as i64).product();
+
     println!("Product: {}", product);
-    // note: NOT 118483834279
 
     Ok(())
 }
