@@ -1,7 +1,7 @@
 use anyhow::{anyhow, Result};
 use lazy_static::lazy_static;
 use regex::Regex;
-use std::{ops::RangeInclusive, str::FromStr};
+use std::{collections::HashSet, ops::RangeInclusive, str::FromStr};
 
 #[derive(Debug, Clone)]
 struct FieldRange(Vec<RangeInclusive<i32>>);
@@ -117,16 +117,22 @@ impl FromStr for Problem {
     }
 }
 
-fn find_field_number_matching(field_spec: &FieldSpec, valid_tickets: &[Ticket]) -> Option<usize> {
-    for i in 0..valid_tickets.first()?.0.len() {
+fn find_field_numbers_possible(field_spec: &FieldSpec, valid_tickets: &[Ticket]) -> HashSet<usize> {
+    let mut matches = HashSet::new();
+    let num_fields = valid_tickets.first().map(|t| t.0.len()).unwrap_or(0);
+    for i in 0..num_fields {
         if valid_tickets.iter().all(|t| {
             let field_val = t.0[i];
             field_spec.ranges.contains(&field_val)
         }) {
-            return Some(i);
+            matches.insert(i);
         }
     }
-    None
+    matches
+}
+
+fn skip_nth_value<T>(source: impl Iterator<Item = T>, n:usize) -> impl Iterator<Item = T> {
+    source.enumerate().filter(move |(i,_v)| *i != n).map(|(_i,v)| v)
 }
 
 fn main() -> Result<()> {
@@ -153,7 +159,7 @@ fn main() -> Result<()> {
         .filter(|&t| problem.ticket_invalid_fields(t).count() == 0)
         .cloned()
         .collect();
-    //println!("Valid nearby tickets: {:?}", valid_nearby);
+    println!("Valid nearby tickets: {:?}", valid_nearby);
 
     // let field_spec = problem.field_specs.iter().find(|f| f.name == "seat").unwrap();
     // let field_number = find_field_number_matching(field_spec, &valid_nearby).unwrap();
@@ -164,25 +170,74 @@ fn main() -> Result<()> {
         .iter()
         .filter(|&f| f.name.contains("departure"))
         .collect();
+    //let departure_fields: Vec<_> = problem.field_specs.iter().collect();
 
+    // find sets of fields that could match
     let departure_field_numbers: Vec<_> = departure_fields
         .iter()
-        .map(|&f| find_field_number_matching(f, &valid_nearby))
+        .map(|&f| find_field_numbers_possible(f, &valid_nearby))
         .collect();
 
-    let my_field_values: Option<Vec<_>> = departure_field_numbers
+    println!("Departure field numbers: {:?}", departure_field_numbers);
+
+    // now reduce each to a unique field -- one where we have only a single possible option
+    // loop through all the field ranges
+    //  - find a number that exists in only one set -> this is the only option for this set
+    //  - remove the other numbers from this set
+    //  - repeat
+    //  - stop when all sets contain only a single entry
+    let mut finished = false;
+    let mut sets = departure_field_numbers.clone();
+    while !finished {
+        for i in 0..sets.len() {
+            // find a number in this set that is unique
+            let unique_num_extract = {
+                let set = &sets[i];
+                set.iter()
+                    .find(|&v| {
+                        sets.iter()
+                            // skip self (checking the _reference_, not values)
+                            .filter(|&s| !std::ptr::eq(s, set))
+                            // no other sets contain this value
+                            .all(|s| !s.contains(v))
+                    })
+                    .copied() // needed to break reference (borrow checker)
+            };
+            // clear this set, and replace with only the unique number
+            if let Some(num) = unique_num_extract {
+                let mut_set = &mut sets[i];
+                if mut_set.len() == 1 {
+                    continue;
+                }
+                println!("Reducing set #{} {:?} -> {}", i, mut_set, num);
+                mut_set.clear();
+                mut_set.insert(num);
+                continue; // start next loop
+            }
+        }
+        // check if all sets are single elements
+        if sets.iter().all(|s| s.len() == 1) {
+            finished = true;
+        }
+    }
+
+    println!("Unique sets: {:?}", sets);
+
+    let my_field_values: Option<Vec<_>> = sets
         .iter()
-        .map(|n| n.map(|nn| problem.ticket.0[nn] as i64))
+        .map(|set| set.iter().nth(0).map(|nn| problem.ticket.0[*nn]))
         .collect();
 
     let product: i64 = my_field_values
         .as_ref()
         .ok_or(anyhow!("did not find all fields"))?
         .iter()
+        .map(|v| *v as i64)
         .product();
 
     println!("My field values: {:?}", &my_field_values);
     println!("Product: {}", product);
+    // note: NOT 118483834279
 
     Ok(())
 }
