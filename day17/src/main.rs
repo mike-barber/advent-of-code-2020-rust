@@ -1,8 +1,7 @@
 use anyhow::Result;
-use itertools::{cons_tuples, Itertools};
+use itertools::Itertools;
 use std::{
     collections::HashSet,
-    iter,
     ops::{Add, RangeInclusive},
     str::FromStr,
 };
@@ -13,16 +12,16 @@ struct Coord3(i32, i32, i32);
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Copy, Default)]
 struct Coord4(i32, i32, i32, i32);
 
-impl Add<&Coord3> for Coord3 {
+impl Add<Coord3> for Coord3 {
     type Output = Self;
-    fn add(self, rhs: &Self) -> Self::Output {
+    fn add(self, rhs: Self) -> Self::Output {
         Coord3(self.0 + rhs.0, self.1 + rhs.1, self.2 + rhs.2)
     }
 }
 
-impl Add<&Coord4> for Coord4 {
+impl Add<Coord4> for Coord4 {
     type Output = Self;
-    fn add(self, rhs: &Self) -> Self::Output {
+    fn add(self, rhs: Self) -> Self::Output {
         Coord4(
             self.0 + rhs.0,
             self.1 + rhs.1,
@@ -32,18 +31,18 @@ impl Add<&Coord4> for Coord4 {
     }
 }
 
-impl From<(i32,i32)> for Coord3 {
-    fn from(c: (i32,i32)) -> Self {
+impl From<(i32, i32)> for Coord3 {
+    fn from(c: (i32, i32)) -> Self {
         Coord3(c.0, c.1, 0)
     }
 }
-impl From<(i32,i32)> for Coord4 {
-    fn from(c: (i32,i32)) -> Self {
+impl From<(i32, i32)> for Coord4 {
+    fn from(c: (i32, i32)) -> Self {
         Coord4(c.0, c.1, 0, 0)
     }
 }
 
-trait Coord: Sized + std::hash::Hash + Eq + From<(i32,i32)> {
+trait Coord: Sized + std::hash::Hash + Eq + From<(i32, i32)> + Default + Clone + Copy {
     fn bounding_box(set: &HashSet<Self>, expand: i32) -> (Self, Self);
     // TODO: Not sure if Box<dyn xx> is required; research needed.
     fn neighbours(&self) -> Box<dyn Iterator<Item = Self>>;
@@ -54,25 +53,26 @@ impl Coord for Coord3 {
     fn bounding_box(set: &HashSet<Self>, expand: i32) -> (Self, Self) {
         (
             Coord3(
-                set.iter().map(|c| c.0).min().unwrap(),
-                set.iter().map(|c| c.1).min().unwrap(),
-                set.iter().map(|c| c.2).min().unwrap(),
+                set.iter().map(|c| c.0).min().unwrap_or(0) - expand,
+                set.iter().map(|c| c.1).min().unwrap_or(0) - expand,
+                set.iter().map(|c| c.2).min().unwrap_or(0) - expand,
             ),
             Coord3(
-                set.iter().map(|c| c.0).max().unwrap(),
-                set.iter().map(|c| c.1).max().unwrap(),
-                set.iter().map(|c| c.2).max().unwrap(),
+                set.iter().map(|c| c.0).max().unwrap_or(0) + expand,
+                set.iter().map(|c| c.1).max().unwrap_or(0) + expand,
+                set.iter().map(|c| c.2).max().unwrap_or(0) + expand,
             ),
         )
     }
 
     fn neighbours(&self) -> Box<dyn Iterator<Item = Self>> {
+        let here = self.clone();
         let skip = vec![0, 0, 0];
         let ii = (0..3)
             .map(|_| -1..1)
             .multi_cartesian_product()
-            .filter(|v| v != &skip)
-            .map(|v| Coord3(v[0], v[1], v[2]));
+            .filter(move |v| v != &skip)
+            .map(move |v| Coord3(v[0], v[1], v[2]) + here);
         Box::new(ii)
     }
 
@@ -89,27 +89,28 @@ impl Coord for Coord4 {
     fn bounding_box(set: &HashSet<Self>, expand: i32) -> (Self, Self) {
         (
             Coord4(
-                set.iter().map(|c| c.0).min().unwrap(),
-                set.iter().map(|c| c.1).min().unwrap(),
-                set.iter().map(|c| c.2).min().unwrap(),
-                set.iter().map(|c| c.3).min().unwrap(),
+                set.iter().map(|c| c.0).min().unwrap_or(0) - expand,
+                set.iter().map(|c| c.1).min().unwrap_or(0) - expand,
+                set.iter().map(|c| c.2).min().unwrap_or(0) - expand,
+                set.iter().map(|c| c.3).min().unwrap_or(0) - expand,
             ),
             Coord4(
-                set.iter().map(|c| c.0).max().unwrap(),
-                set.iter().map(|c| c.1).max().unwrap(),
-                set.iter().map(|c| c.2).max().unwrap(),
-                set.iter().map(|c| c.3).max().unwrap(),
+                set.iter().map(|c| c.0).max().unwrap_or(0) + expand,
+                set.iter().map(|c| c.1).max().unwrap_or(0) + expand,
+                set.iter().map(|c| c.2).max().unwrap_or(0) + expand,
+                set.iter().map(|c| c.3).max().unwrap_or(0) + expand,
             ),
         )
     }
 
     fn neighbours(&self) -> Box<dyn Iterator<Item = Self>> {
+        let here = self.clone();
         let skip = vec![0, 0, 0, 0];
         let ii = (0..4)
             .map(|_| -1..1)
             .multi_cartesian_product()
-            .filter(|v| v != &skip)
-            .map(|v| Coord4(v[0], v[1], v[2], v[3]));
+            .filter(move |v| v != &skip)
+            .map(move |v| Coord4(v[0], v[1], v[2], v[3]) + here);
         Box::new(ii)
     }
 
@@ -175,11 +176,14 @@ impl Grid<Coord3> {
     }
 }
 
-impl<TC> FromStr for Grid<TC> where TC: Coord {
+impl<TC> FromStr for Grid<TC>
+where
+    TC: Coord,
+{
     type Err = anyhow::Error;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        let mut grid = Grid::default();
+        let mut grid = Self::default();
         let lines: Vec<_> = s.lines().collect();
         let x_offset = lines[0].len() / 2 + 1;
         let y_offset = lines.len() / 2 + 1;
@@ -199,21 +203,49 @@ impl<TC> FromStr for Grid<TC> where TC: Coord {
 impl std::fmt::Display for Grid<Coord3> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         writeln!(f, "")?;
-        // TODO use: itertools group_by
-        for z in self.range_z() {
+        let (min, max) = Coord3::bounding_box(&self.0, 0);
+        for z in min.2..=max.2 {
             writeln!(f, "--- z={}", z)?;
-            for y in self.range_y() {
-                for x in self.range_x() {
+            for y in min.1..=max.1 {
+                for x in min.0..=max.0 {
                     write!(
                         f,
                         "{}",
-                        match self.get(&Coord(x, y, z)) {
+                        match self.get(&Coord3(x, y, z)) {
                             true => '#',
                             false => '.',
                         }
                     )?;
                 }
                 writeln!(f, "")?;
+            }
+        }
+        writeln!(f, "---")?;
+        Ok(())
+    }
+}
+
+impl std::fmt::Display for Grid<Coord4> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        writeln!(f, "")?;
+        let (min, max) = Coord4::bounding_box(&self.0, 0);
+        for u in min.3..=max.3 {
+            writeln!(f, "----- u={}", u)?;
+            for z in min.2..=max.2 {
+                writeln!(f, "--- z={}", z)?;
+                for y in min.1..=max.1 {
+                    for x in min.0..=max.0 {
+                        write!(
+                            f,
+                            "{}",
+                            match self.get(&Coord4(x, y, z, u)) {
+                                true => '#',
+                                false => '.',
+                            }
+                        )?;
+                    }
+                    writeln!(f, "")?;
+                }
             }
         }
         writeln!(f, "---")?;
@@ -234,8 +266,8 @@ impl RangeExpand for RangeInclusive<i32> {
 }
 
 fn main() -> Result<()> {
-    let problem_str = std::fs::read_to_string("day17/input.txt")?;
-    let init_grid: Grid = problem_str.parse()?;
+    let problem_str = std::fs::read_to_string("day17/example-input.txt")?;
+    let init_grid: Grid<Coord3> = problem_str.parse()?;
     println!("Grid: {:?}", init_grid);
 
     let mut grid = init_grid.clone();
