@@ -24,7 +24,7 @@ impl FromStr for FieldSpec {
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         lazy_static! {
-            static ref RE_FIELD: Regex = Regex::new(r"([[:alpha:]]+): (.*)").unwrap();
+            static ref RE_FIELD: Regex = Regex::new(r"([a-z ]+): (.*)").unwrap();
             static ref RE_RANGE: Regex = Regex::new(r"(\d+)-(\d+)").unwrap();
         }
 
@@ -117,22 +117,72 @@ impl FromStr for Problem {
     }
 }
 
+fn find_field_number_matching(field_spec: &FieldSpec, valid_tickets: &[Ticket]) -> Option<usize> {
+    for i in 0..valid_tickets.first()?.0.len() {
+        if valid_tickets.iter().all(|t| {
+            let field_val = t.0[i];
+            field_spec.ranges.contains(&field_val)
+        }) {
+            return Some(i);
+        }
+    }
+    None
+}
+
 fn main() -> Result<()> {
     let problem_str = std::fs::read_to_string("day16/input.txt")?;
     let problem: Problem = problem_str.parse()?;
     println!("Problem: {:?}", problem);
 
+    println!("Part 1 ---");
     for t in problem.nearby_tickets.iter() {
         let invalid_fields: Vec<_> = problem.ticket_invalid_fields(t).collect();
         println!("invalid fields: {:?}", invalid_fields);
     }
-
-    let ticket_scanning_error_rate:i32 = problem
+    let ticket_scanning_error_rate: i32 = problem
         .nearby_tickets
         .iter()
         .flat_map(|t| problem.ticket_invalid_fields(t))
         .sum();
     println!("ticket scanning error rate {}", ticket_scanning_error_rate);
+
+    println!("Part 2 ---");
+    let valid_nearby: Vec<Ticket> = problem
+        .nearby_tickets
+        .iter()
+        .filter(|&t| problem.ticket_invalid_fields(t).count() == 0)
+        .cloned()
+        .collect();
+    //println!("Valid nearby tickets: {:?}", valid_nearby);
+
+    // let field_spec = problem.field_specs.iter().find(|f| f.name == "seat").unwrap();
+    // let field_number = find_field_number_matching(field_spec, &valid_nearby).unwrap();
+    // println!("field: {}, value: {}", field_number, problem.ticket.0[field_number]);
+
+    let departure_fields: Vec<_> = problem
+        .field_specs
+        .iter()
+        .filter(|&f| f.name.contains("departure"))
+        .collect();
+
+    let departure_field_numbers: Vec<_> = departure_fields
+        .iter()
+        .map(|&f| find_field_number_matching(f, &valid_nearby))
+        .collect();
+
+    let my_field_values: Option<Vec<_>> = departure_field_numbers
+        .iter()
+        .map(|n| n.map(|nn| problem.ticket.0[nn] as i64))
+        .collect();
+
+    let product: i64 = my_field_values
+        .as_ref()
+        .ok_or(anyhow!("did not find all fields"))?
+        .iter()
+        .product();
+
+    println!("My field values: {:?}", &my_field_values);
+    println!("Product: {}", product);
 
     Ok(())
 }
