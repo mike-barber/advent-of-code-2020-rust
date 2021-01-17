@@ -117,6 +117,7 @@ name = "day17"
 version = "0.1.0"
 dependencies = [
  "anyhow",
+ "itertools",
 ]
 
 [[package]]
