@@ -1,34 +1,23 @@
+use anyhow::{anyhow, bail, Result};
+use lazy_static::lazy_static;
+use regex::Regex;
 use std::{
     ops::{Range, RangeInclusive},
     str::FromStr,
     todo,
 };
 
-use anyhow::{anyhow, bail, Result};
-
-trait RangeContains<T> {
-    fn contains(&self, v: &T) -> bool;
-}
-
 #[derive(Debug, Clone)]
-struct FieldRange(Vec<Range<i32>>);
+struct FieldRange(Vec<RangeInclusive<i32>>);
 impl FieldRange {
-    fn create(ranges: &[Range<i32>]) -> Self {
-        FieldRange(ranges.to_vec())
+    fn create(ranges: Vec<RangeInclusive<i32>>) -> Self {
+        FieldRange(ranges)
     }
-}
-// hook trait up to existing range types
-impl RangeContains<i32> for RangeInclusive<i32> {
-    fn contains(&self, v: &i32) -> bool {
-        self.contains(v)
-    }
-}
-// and do so for my own type too
-impl RangeContains<i32> for FieldRange {
     fn contains(&self, v: &i32) -> bool {
         self.0.iter().all(|r| r.contains(v))
     }
 }
+
 #[derive(Debug, Clone)]
 struct FieldSpec {
     name: String,
@@ -38,7 +27,28 @@ impl FromStr for FieldSpec {
     type Err = anyhow::Error;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        todo!()
+        lazy_static! {
+            static ref RE_FIELD: Regex = Regex::new(r"([[:alpha:]]+): (.*)").unwrap();
+            static ref RE_RANGE: Regex = Regex::new(r"(\d+)-(\d+)").unwrap();
+        }
+
+        let outer = RE_FIELD.captures(s).ok_or(anyhow!("parsing error"))?;
+        let name = outer[1].to_string();
+
+        let mut ranges = Vec::new();
+        for range_str in outer[2].split("or") {
+            let captures = RE_RANGE
+                .captures(range_str)
+                .ok_or(anyhow!("range parsing error"))?;
+            let i0: i32 = captures[1].parse()?;
+            let i1: i32 = captures[2].parse()?;
+            ranges.push(i0..=i1);
+        }
+
+        Ok(FieldSpec {
+            name,
+            ranges: FieldRange::create(ranges),
+        })
     }
 }
 
@@ -74,21 +84,20 @@ impl FromStr for Problem {
             fields.push(l.parse()?);
         }
 
-        lines.next().ok_or(anyhow!("input short"))?;
+        // already ate the empty line above, just eat the title
         if lines.next().ok_or(anyhow!("input short"))? != "your ticket:" {
             return Err(anyhow!("missing your ticket"));
         }
-
         let ticket: Ticket = lines
             .next()
             .ok_or(anyhow!("missing your ticket"))?
             .parse()?;
 
+        // eat the empty line and title
         lines.next().ok_or(anyhow!("input short"))?;
-        if lines.next().ok_or(anyhow!("input short"))? != "your ticket:" {
-            return Err(anyhow!("missing your ticket"));
+        if lines.next().ok_or(anyhow!("input short"))? != "nearby tickets:" {
+            return Err(anyhow!("missing nearby tickets"));
         }
-
         let mut nearby_tickets: Vec<Ticket> = Vec::new();
         while let Some(l) = lines.next() {
             nearby_tickets.push(l.parse()?);
@@ -103,15 +112,9 @@ impl FromStr for Problem {
 }
 
 fn main() -> Result<()> {
-    println!("Hello, world!");
-
-    let r1 = 1..=10;
-    let r2 = 20..=30;
-
-    let r = r1.chain(r2);
-
-    println!("r: {:?}", r);
-    println!("r: {:?}", r);
+    let problem_str = std::fs::read_to_string("day16/example-input.txt")?;
+    let problem: Problem = problem_str.parse()?;
+    println!("Problem: {:?}", problem);
 
     Ok(())
 }
