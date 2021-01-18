@@ -2,7 +2,7 @@ use anyhow::Result;
 use itertools::iproduct;
 use std::{
     collections::HashSet,
-    ops::{Add, RangeInclusive},
+    ops::{Add, RangeInclusive, Sub},
     str::FromStr,
 };
 
@@ -18,6 +18,12 @@ impl Add<Coord3> for Coord3 {
         Coord3(self.0 + rhs.0, self.1 + rhs.1, self.2 + rhs.2)
     }
 }
+impl Sub<Coord3> for Coord3 {
+    type Output = Self;
+    fn sub(self, rhs: Coord3) -> Self::Output {
+        Coord3(self.0 - rhs.0, self.1 - rhs.1, self.2 - rhs.2)
+    }
+}
 
 impl Add<Coord4> for Coord4 {
     type Output = Self;
@@ -27,6 +33,17 @@ impl Add<Coord4> for Coord4 {
             self.1 + rhs.1,
             self.2 + rhs.2,
             self.3 + rhs.3,
+        )
+    }
+}
+impl Sub<Coord4> for Coord4 {
+    type Output = Self;
+    fn sub(self, rhs: Self) -> Self::Output {
+        Coord4(
+            self.0 - rhs.0,
+            self.1 - rhs.1,
+            self.2 - rhs.2,
+            self.3 - rhs.3,
         )
     }
 }
@@ -57,22 +74,22 @@ trait Coord: Sized + std::hash::Hash + Eq + From<(i32, i32)> + Default + Clone +
     // TODO: Not sure if Box<dyn xx> is required; research needed.
     fn neighbours(&self) -> Box<dyn Iterator<Item = Self>>;
     fn space(min: Self, max: Self) -> Box<dyn Iterator<Item = Self>>;
+    fn per_element_min(lhs: &Self, rhs: &Self) -> Self;
+    fn per_element_max(lhs: &Self, rhs: &Self) -> Self;
 }
 
 impl Coord for Coord3 {
     fn bounding_box(set: &HashSet<Self>, expand: i32) -> (Self, Self) {
-        (
-            Coord3(
-                set.iter().map(|c| c.0).min().unwrap_or(0) - expand,
-                set.iter().map(|c| c.1).min().unwrap_or(0) - expand,
-                set.iter().map(|c| c.2).min().unwrap_or(0) - expand,
-            ),
-            Coord3(
-                set.iter().map(|c| c.0).max().unwrap_or(0) + expand,
-                set.iter().map(|c| c.1).max().unwrap_or(0) + expand,
-                set.iter().map(|c| c.2).max().unwrap_or(0) + expand,
-            ),
-        )
+        let (min, max) = set
+            .iter()
+            .fold((Coord3::default(), Coord3::default()), |state, c| {
+                (
+                    Coord3::per_element_min(&state.0, c),
+                    Coord3::per_element_max(&state.1, c),
+                )
+            });
+        let expand = Coord3(expand, expand, expand);
+        (min - expand, max + expand)
     }
 
     fn neighbours(&self) -> Box<dyn Iterator<Item = Self>> {
@@ -93,24 +110,36 @@ impl Coord for Coord3 {
             iproduct!(min.0..=max.0, min.1..=max.1, min.2..=max.2).map(|vect| Coord3::from(vect)),
         )
     }
+
+    fn per_element_min(lhs: &Self, rhs: &Self) -> Self {
+        Self(
+            i32::min(lhs.0, rhs.0),
+            i32::min(lhs.1, rhs.1),
+            i32::min(lhs.2, rhs.2),
+        )
+    }
+
+    fn per_element_max(lhs: &Self, rhs: &Self) -> Self {
+        Self(
+            i32::max(lhs.0, rhs.0),
+            i32::max(lhs.1, rhs.1),
+            i32::max(lhs.2, rhs.2),
+        )
+    }
 }
 
 impl Coord for Coord4 {
     fn bounding_box(set: &HashSet<Self>, expand: i32) -> (Self, Self) {
-        (
-            Coord4(
-                set.iter().map(|c| c.0).min().unwrap_or(0) - expand,
-                set.iter().map(|c| c.1).min().unwrap_or(0) - expand,
-                set.iter().map(|c| c.2).min().unwrap_or(0) - expand,
-                set.iter().map(|c| c.3).min().unwrap_or(0) - expand,
-            ),
-            Coord4(
-                set.iter().map(|c| c.0).max().unwrap_or(0) + expand,
-                set.iter().map(|c| c.1).max().unwrap_or(0) + expand,
-                set.iter().map(|c| c.2).max().unwrap_or(0) + expand,
-                set.iter().map(|c| c.3).max().unwrap_or(0) + expand,
-            ),
-        )
+        let (min, max) = set
+            .iter()
+            .fold((Coord4::default(), Coord4::default()), |state, c| {
+                (
+                    Coord4::per_element_min(&state.0, c),
+                    Coord4::per_element_max(&state.1, c),
+                )
+            });
+        let expand = Coord4(expand, expand, expand, expand);
+        (min - expand, max + expand)
     }
 
     fn neighbours(&self) -> Box<dyn Iterator<Item = Self>> {
@@ -130,6 +159,24 @@ impl Coord for Coord4 {
         Box::new(
             iproduct!(min.0..=max.0, min.1..=max.1, min.2..=max.2, min.3..=max.3)
                 .map(|vect| Coord4::from(vect)),
+        )
+    }
+
+    fn per_element_min(lhs: &Self, rhs: &Self) -> Self {
+        Self(
+            i32::min(lhs.0, rhs.0),
+            i32::min(lhs.1, rhs.1),
+            i32::min(lhs.2, rhs.2),
+            i32::min(lhs.3, rhs.3),
+        )
+    }
+
+    fn per_element_max(lhs: &Self, rhs: &Self) -> Self {
+        Self(
+            i32::max(lhs.0, rhs.0),
+            i32::max(lhs.1, rhs.1),
+            i32::max(lhs.2, rhs.2),
+            i32::max(lhs.3, rhs.3),
         )
     }
 }
