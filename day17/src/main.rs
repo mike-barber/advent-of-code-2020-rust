@@ -157,13 +157,11 @@ where
     fn count_active_total(&self) -> i32 {
         self.0.len() as i32
     }
-}
 
-impl Grid<Coord3> {
     fn step(&self) -> Self {
         let mut new_grid = Grid::default();
-        let (min, max) = Coord3::bounding_box(&self.0, 1);
-        for c in Coord3::space(min, max) {
+        let (min, max) = Coord::bounding_box(&self.0, 1);
+        for c in Coord::space(min, max) {
             let neighbours = self.count_active_neighbours(&c);
             let new_state = match (self.get(&c), neighbours) {
                 (true, x) if x == 2 || x == 3 => true,
@@ -267,17 +265,30 @@ impl RangeExpand for RangeInclusive<i32> {
 
 fn main() -> Result<()> {
     let problem_str = std::fs::read_to_string("day17/input.txt")?;
-    let init_grid: Grid<Coord3> = problem_str.parse()?;
-    println!("Grid: {:?}", init_grid);
 
-    let mut grid = init_grid.clone();
-    println!("Grid {}", grid);
-    for iteration in 1..=6 {
-        grid = grid.step();
-        println!("Iteration {} Grid {}", iteration, grid);
+    println!("Part 1 -----------");
+    {
+        let mut grid: Grid<Coord3> = problem_str.parse()?;
+        println!("Grid {}", grid);
+        for iteration in 1..=6 {
+            grid = grid.step();
+            println!("Iteration {}:", iteration);
+            println!("{}", grid);
+        }
+        println!("Active after 6 cycles: {}", grid.count_active_total());
     }
 
-    println!("Active after 6 cycles: {}", grid.count_active_total());
+    println!("Part 2 -----------");
+    {
+        let mut grid: Grid<Coord4> = problem_str.parse()?;
+        println!("Grid {}", grid);
+        for iteration in 1..=6 {
+            grid = grid.step();
+            println!("Iteration {}:", iteration);
+            println!("{}", grid);
+        }
+        println!("Active after 6 cycles: {}", grid.count_active_total());
+    }
 
     Ok(())
 }
