@@ -71,7 +71,9 @@ impl From<(i32, i32, i32, i32)> for Coord4 {
 
 trait Coord: Sized + std::hash::Hash + Eq + From<(i32, i32)> + Default + Clone + Copy {
     fn bounding_box(set: &HashSet<Self>, expand: i32) -> (Self, Self);
-    // TODO: Not sure if Box<dyn xx> is required; research needed.
+    // TODO: dynamic dispatch here works, but worth considering other options
+    //       for faster code. Interesting discussions on options here:
+    //       https://depth-first.com/articles/2020/06/22/returning-rust-iterators/
     fn neighbours(&self) -> Box<dyn Iterator<Item = Self>>;
     fn space(min: Self, max: Self) -> Box<dyn Iterator<Item = Self>>;
     fn per_element_min(lhs: &Self, rhs: &Self) -> Self;
