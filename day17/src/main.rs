@@ -1,5 +1,5 @@
 use anyhow::Result;
-use itertools::Itertools;
+use itertools::iproduct;
 use std::{
     collections::HashSet,
     ops::{Add, RangeInclusive},
@@ -36,9 +36,19 @@ impl From<(i32, i32)> for Coord3 {
         Coord3(c.0, c.1, 0)
     }
 }
+impl From<(i32, i32, i32)> for Coord3 {
+    fn from(c: (i32, i32, i32)) -> Self {
+        Coord3(c.0, c.1, c.2)
+    }
+}
 impl From<(i32, i32)> for Coord4 {
     fn from(c: (i32, i32)) -> Self {
         Coord4(c.0, c.1, 0, 0)
+    }
+}
+impl From<(i32, i32, i32, i32)> for Coord4 {
+    fn from(c: (i32, i32, i32, i32)) -> Self {
+        Coord4(c.0, c.1, c.2, c.3)
     }
 }
 
@@ -67,21 +77,21 @@ impl Coord for Coord3 {
 
     fn neighbours(&self) -> Box<dyn Iterator<Item = Self>> {
         let here = self.clone();
-        let skip = vec![0, 0, 0];
-        let ii = (0..3)
-            .map(|_| -1..=1)
-            .multi_cartesian_product()
-            .filter(move |v| v != &skip)
-            .map(move |v| Coord3(v[0], v[1], v[2]) + here);
-        Box::new(ii)
+        let cc = iproduct!(-1..=1, -1..=1, -1..=1).filter_map(move |vect| {
+            let c = here + vect.into();
+            if c != here {
+                Some(c)
+            } else {
+                None
+            }
+        });
+        Box::new(cc)
     }
 
     fn space(min: Self, max: Self) -> Box<dyn Iterator<Item = Self>> {
-        let ii = (min.0..=max.0)
-            .cartesian_product(min.1..=max.1)
-            .cartesian_product(min.2..=max.2)
-            .map(|((a, b), c)| Coord3(a, b, c));
-        Box::new(ii)
+        Box::new(
+            iproduct!(min.0..=max.0, min.1..=max.1, min.2..=max.2).map(|vect| Coord3::from(vect)),
+        )
     }
 }
 
@@ -105,22 +115,22 @@ impl Coord for Coord4 {
 
     fn neighbours(&self) -> Box<dyn Iterator<Item = Self>> {
         let here = self.clone();
-        let skip = vec![0, 0, 0, 0];
-        let ii = (0..4)
-            .map(|_| -1..=1)
-            .multi_cartesian_product()
-            .filter(move |v| v != &skip)
-            .map(move |v| Coord4(v[0], v[1], v[2], v[3]) + here);
-        Box::new(ii)
+        let cc = iproduct!(-1..=1, -1..=1, -1..=1, -1..=1).filter_map(move |vect| {
+            let c = here + vect.into();
+            if c != here {
+                Some(c)
+            } else {
+                None
+            }
+        });
+        Box::new(cc)
     }
 
     fn space(min: Self, max: Self) -> Box<dyn Iterator<Item = Self>> {
-        let ii = (min.0..=max.0)
-            .cartesian_product(min.1..=max.1)
-            .cartesian_product(min.2..=max.2)
-            .cartesian_product(min.3..=max.3)
-            .map(|(((a, b), c), d)| Coord4(a, b, c, d));
-        Box::new(ii)
+        Box::new(
+            iproduct!(min.0..=max.0, min.1..=max.1, min.2..=max.2, min.3..=max.3)
+                .map(|vect| Coord4::from(vect)),
+        )
     }
 }
 
