@@ -125,9 +125,7 @@ impl Coord for Coord4 {
 }
 
 #[derive(Debug, Default, Clone)]
-struct Grid<TC>(HashSet<TC>)
-where
-    TC: Coord;
+struct Grid<TC>(HashSet<TC>);
 
 impl<TC> Grid<TC>
 where
@@ -160,8 +158,8 @@ where
 
     fn step(&self) -> Self {
         let mut new_grid = Grid::default();
-        let (min, max) = Coord::bounding_box(&self.0, 1);
-        for c in Coord::space(min, max) {
+        let (min, max) = TC::bounding_box(&self.0, 1);
+        for c in TC::space(min, max) {
             let neighbours = self.count_active_neighbours(&c);
             let new_state = match (self.get(&c), neighbours) {
                 (true, x) if x == 2 || x == 3 => true,
