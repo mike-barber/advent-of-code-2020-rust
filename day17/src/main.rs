@@ -74,6 +74,8 @@ trait Coord: Sized + std::hash::Hash + Eq + From<(i32, i32)> + Default + Clone +
     // TODO: dynamic dispatch here works, but worth considering other options
     //       for faster code. Interesting discussions on options here:
     //       https://depth-first.com/articles/2020/06/22/returning-rust-iterators/
+    //       ... no easy approach, unless I write my own iterators from scratch 
+    //           for neighbours and space. Not worth the effort now.
     fn neighbours(&self) -> Box<dyn Iterator<Item = Self>>;
     fn space(min: Self, max: Self) -> Box<dyn Iterator<Item = Self>>;
     fn per_element_min(lhs: &Self, rhs: &Self) -> Self;
