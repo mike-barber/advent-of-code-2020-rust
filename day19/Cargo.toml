@@ -1,0 +1,11 @@
+[package]
+name = "day19"
+version = "0.1.0"
+authors = ["Michael Barber <60610888+mike-barber@users.noreply.github.com>"]
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+nom = "6.0"
+anyhow = "1"
