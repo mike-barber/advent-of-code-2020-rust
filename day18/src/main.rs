@@ -1,3 +1,5 @@
+use std::io::{BufRead, BufReader};
+
 use anyhow::{anyhow, Result};
 use nom::{
     branch::alt,
@@ -24,7 +26,7 @@ enum Expression {
 }
 // calculate strictly left-to-right, as per problem spec,
 // without obeying addition/multiplication precedence.
-// TODO: can probably do this with a normal fold instead, 
+// TODO: can probably do this with a normal fold instead,
 //       or more interestingly, with nom's fold.
 fn reduce(terms: &[Expression]) -> Result<i64> {
     let mut value = 0i64;
@@ -98,6 +100,16 @@ fn main() -> Result<()> {
     println!("{:?}", reduce(&parse_program("1 + 2")?));
     println!("{:?}", reduce(&parse_program("1 + 2 * 3")?));
     println!("{:?}", reduce(&parse_program("2 * (1 + 2)")?));
+
+    let mut sum = 0i64;
+    let problem_str = std::fs::read_to_string("day18/input.txt")?;
+    for l in problem_str.lines() {
+        let res = reduce(&parse_program(l)?)?;
+        println!("result {} for {}", res, l);
+        sum += res;
+    }
+    println!("Total: {}", sum);
+
 
     Ok(())
 }
