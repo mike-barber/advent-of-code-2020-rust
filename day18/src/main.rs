@@ -1,4 +1,4 @@
-use nom::{IResult, branch::alt, bytes::complete::tag, character::complete::one_of, combinator::{map_res, recognize}, multi::{many1, separated_list1}, number::complete::le_i64, sequence::terminated};
+use nom::{IResult, branch::alt, bytes::complete::tag, character::complete::one_of, combinator::{map_res, recognize}, multi::{many1, separated_list1}, number::complete::le_i64, sequence::{delimited, terminated}};
 use anyhow::{Result, anyhow};
 
 extern crate nom;
@@ -32,8 +32,12 @@ fn expression(input: &str) -> IResult<&str, Vec<Expression>> {
         map_value);
     let operation = map_res(recognize(one_of("+*")), map_op);
     let alternatives = alt((value,operation));
+    //let bracketed = delimited(tag("("), alternatives, tag(")")); // can't repeat alternatives?
     let mut term = separated_list1(tag(" "), alternatives);
+
     
+
+
     term(input)
 }
 
@@ -50,6 +54,7 @@ fn main() {
 mod tests
 {
     use super::*;
+
 
 
 }
