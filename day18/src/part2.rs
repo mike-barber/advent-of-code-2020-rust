@@ -1,16 +1,7 @@
 use std::io::{BufRead, BufReader};
 
 use anyhow::{anyhow, Result};
-use nom::{
-    branch::alt,
-    bytes::complete::tag,
-    character::complete::one_of,
-    combinator::{all_consuming, map_res, recognize},
-    fold_many1,
-    multi::{fold_many0, many1, separated_list1},
-    sequence::{delimited, pair},
-    IResult,
-};
+use nom::{IResult, branch::alt, bytes::complete::tag, character::complete::char, character::complete::{one_of, space0}, combinator::{all_consuming, map_res, recognize}, fold_many1, multi::{fold_many0, many1, separated_list1}, sequence::{delimited, pair}};
 
 extern crate nom;
 
@@ -48,16 +39,15 @@ fn parens(s: &str) -> IResult<&str, Expression> {
     delimited(tag("("), multiplication_terms, tag(")"))(s)
 }
 fn operation_add(s: &str) -> IResult<&str, Operation> {
-    map_res(recognize(one_of("+")), map_op)(s)
+    map_res(recognize(char('+')), map_op)(s)
 }
 fn operation_mul(s: &str) -> IResult<&str, Operation> {
-    map_res(recognize(one_of("*")), map_op)(s)
+    map_res(recognize(char('*')), map_op)(s)
 }
 
 // addition takes priority in this special world
 fn addition_terms(s: &str) -> IResult<&str, Expression> {
     let (s, first) = alt((value, parens))(s)?;
-
     fold_many0(
         pair(operation_add, alt((value, parens))),
         first,
@@ -65,12 +55,12 @@ fn addition_terms(s: &str) -> IResult<&str, Expression> {
     )(s)
 }
 
-// multiplication is lower priority, so refers to addition
+// multiplication is lower priority, so refers to addition so that we ensure that all the additions
+// are completed before multiplication.
 fn multiplication_terms(s: &str) -> IResult<&str, Expression> {
     let (s, first) = addition_terms(s)?; // refers to addition
-
     fold_many0(
-        pair(operation_mul, alt((value, parens))),
+        pair(operation_mul, addition_terms), // refers to addition
         first,
         |acc, (op, val)| Expression::Expr(Box::new(acc), op, Box::new(val)),
     )(s)
@@ -87,7 +77,11 @@ fn parse_program(s: &str) -> Result<Expression> {
 pub fn main() -> Result<()> {
     //let example_string = "2 * 3 + (4 * 5)";
 
+    println!("{:?}", multiplication_terms("1+2"));
+    println!("{:?}", multiplication_terms("1+2+3*4"));
     println!("{:?}", multiplication_terms("1*3+2"));
+
+    println!("{:?}", multiplication_terms("1 * 3 + 2"));
 
     // testing
     println!("{:?}", parse_program("1 + 3 * 5"));
