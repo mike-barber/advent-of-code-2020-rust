@@ -136,7 +136,26 @@ impl RuleSet {
 }
 
 
+fn part1(rules: &[&str], lines:&[&str]) -> Result<()> {
+    let rules = RuleSet::parse(rules.iter());
+    println!("{:?}", &rules);
+
+    let rules = rules?;
+    let mut count = 0;
+    for i in lines.iter() {
+        let res = rules.matches(i);
+        if res {
+            count += 1;
+        }
+        println!("{} => {}", i, res);
+    }
+    println!("Matching inputs: {}", count);
+    Ok(())
+}
+
+
 fn main() -> Result<()> {
+    // test inputs
     let example_rules = [
         r#"0: 4 1 5"#,
         r#"1: 2 3 | 3 2"#,
@@ -152,26 +171,17 @@ fn main() -> Result<()> {
         r#"aaabbb"#,
         r#"aaaabbb"#,
     ];
+    part1(&example_rules, &example_input)?;
 
-    let rules = RuleSet::parse(example_rules.iter());
-    println!("{:?}", &rules);
 
-    let rules = rules?;
-    let mut count = 0;
-    for i in example_input.iter() {
-        let res = rules.matches(i);
-        if res {
-            count += 1;
-        }
-        println!("{} => {}", i, res);
-    }
-    println!("Matching inputs: {}", count);
-    
+    // part 1 actual
+    let rules_string = std::fs::read_to_string("day19/rules.txt")?;
+    let lines_string = std::fs::read_to_string("day19/lines.txt")?;
+    let rules:Vec<&str> = rules_string.lines().collect();
+    let lines:Vec<&str> = lines_string.lines().collect();
+    part1(&rules, &lines)?;
 
-    // for l in example_rules.iter() {
-    //     let rule = rule(l);
-    //     println!("{} => {:?}", l, rule);
-    // }
+
     Ok(())
 }
 
