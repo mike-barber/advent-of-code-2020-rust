@@ -141,9 +141,10 @@ impl RuleSet {
     }
 }
 
+
 fn part1(rules: &[&str], lines: &[&str]) -> Result<()> {
     let rules = RuleSet::parse(rules.iter());
-    println!("{:?}", &rules);
+    //println!("{:?}", &rules);
 
     let rules = rules?;
     let mut count = 0;
@@ -211,6 +212,8 @@ fn main() -> Result<()> {
     part2_test("day19/example-rules-part2-a.txt", "day19/example-input-part2.txt")?;
     println!("Part 2 test B -------------");
     part2_test("day19/example-rules-part2-b.txt", "day19/example-input-part2.txt")?;
+    println!("Part 2 test B these should all match -------------");
+    part2_test("day19/example-rules-part2-b.txt", "day19/example-input-part2-all-match.txt")?;
 
     Ok(())
 }
