@@ -3,7 +3,7 @@ use std::collections::HashMap;
 use anyhow::{anyhow, Result};
 use nom::{IResult, branch::alt, bytes::complete::tag, character::complete::{alpha1, anychar, one_of, space0, space1}, combinator::{map_res, recognize}, multi::{many1, separated_list1}, sequence::{delimited, tuple}};
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 struct RuleId(usize);
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -13,12 +13,16 @@ enum Rule {
     Ordered(Vec<RuleId>),
 }
 
-struct RuleSet(HashMap<usize, Rule>);
+
 
 // e.g. 1
 fn rule_number(i: &str) -> IResult<&str, RuleId> {
+    // map_res(
+    //     delimited(space0, recognize(many1(one_of("1234567890"))), space0),
+    //     |s: &str| s.parse().map(|n| RuleId(n)),
+    // )(i)
     map_res(
-        delimited(space0, recognize(many1(one_of("1234567890"))), space0),
+        recognize(many1(one_of("1234567890"))),
         |s: &str| s.parse().map(|n| RuleId(n)),
     )(i)
 }
@@ -42,7 +46,7 @@ fn ordered(i: &str) -> IResult<&str, Rule> {
 // e.g. 1 2 | 2 3
 fn either(i: &str) -> IResult<&str, Rule> {
     map_res(
-        tuple((ordered, many1(one_of(" | ")), ordered)),
+        tuple((ordered, tag(" | "), ordered)),
         |(aa, _, bb)| match (aa, bb) {
             (Rule::Ordered(a), Rule::Ordered(b)) => Ok(Rule::Either(a, b)),
             _ => Err(anyhow!("missing Rule::Ordered on either")),
@@ -52,13 +56,44 @@ fn either(i: &str) -> IResult<&str, Rule> {
 
 fn rule(i: &str) -> IResult<&str, (RuleId, Rule)> {
     map_res(
-        tuple((rule_number, tag(": "), alt((literal, ordered, either)))),
+        // note: either checked first
+        tuple((rule_number, tag(": "), alt((literal, either, ordered)))),
         |(nn, _, rule)| {
             let res: Result<(RuleId, Rule)> = Ok((nn, rule));
             res
         }
     )(i)
 }
+
+#[derive(Debug)]
+struct RuleSet(HashMap<RuleId, Rule>);
+impl RuleSet {
+    fn parse<'a,I>(lines: I) -> Result<Self> where I:Iterator<Item=&'a &'a str> 
+    {
+        let mut rules = HashMap::new();
+        for l in lines {
+            let (id, rule) = rule(l)
+                .map_err(|e| anyhow!("parsing error: {}", e.to_string()))?.1;
+            rules.insert(id, rule);
+        }
+        Ok(RuleSet(rules))
+    }
+
+    fn evaluate_rule<'a>(i: &'a str, rule: &Rule) -> IResult<&'a str, ()> {
+        use nom::character::complete::char;
+        fn result_ok() -> Result<()> {
+            Ok(())
+        }
+        fn result_fail() -> Result<()> {
+            Err(anyhow!("failed to parse"))
+        }
+        match rule {
+            Rule::Literal(c) => map_res(char(*c), |_| result_ok())(i),
+            _ => result_fail()
+        }
+    }
+}
+
 
 fn main() {
     let example_rules = [
@@ -77,10 +112,12 @@ fn main() {
         r#"aaaabbb"#,
     ];
 
-    for l in example_rules.iter() {
-        let rule = rule(l);
-        println!("{} => {:?}", l, rule);
-    }
+    let rule_set = RuleSet::parse(example_rules.iter());
+    println!("{:?}", rule_set);
+    // for l in example_rules.iter() {
+    //     let rule = rule(l);
+    //     println!("{} => {:?}", l, rule);
+    // }
 }
 
 #[cfg(test)]
