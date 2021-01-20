@@ -1,7 +1,15 @@
 use std::collections::HashMap;
 
 use anyhow::{anyhow, Result};
-use nom::{IResult, branch::alt, bytes::complete::tag, character::complete::{alpha1, anychar, one_of, space0, space1}, combinator::{map_res, recognize}, multi::{many1, separated_list1}, sequence::{delimited, tuple}};
+use nom::{
+    branch::alt,
+    bytes::complete::tag,
+    character::complete::{alpha1, anychar, one_of, space0, space1},
+    combinator::{map_res, recognize},
+    multi::{many1, separated_list1},
+    sequence::{delimited, tuple},
+    IResult,
+};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 struct RuleId(usize);
@@ -13,18 +21,15 @@ enum Rule {
     Ordered(Vec<RuleId>),
 }
 
-
-
 // e.g. 1
 fn rule_number(i: &str) -> IResult<&str, RuleId> {
     // map_res(
     //     delimited(space0, recognize(many1(one_of("1234567890"))), space0),
     //     |s: &str| s.parse().map(|n| RuleId(n)),
     // )(i)
-    map_res(
-        recognize(many1(one_of("1234567890"))),
-        |s: &str| s.parse().map(|n| RuleId(n)),
-    )(i)
+    map_res(recognize(many1(one_of("1234567890"))), |s: &str| {
+        s.parse().map(|n| RuleId(n))
+    })(i)
 }
 
 // e.g. "a"
@@ -61,32 +66,34 @@ fn rule(i: &str) -> IResult<&str, (RuleId, Rule)> {
         |(nn, _, rule)| {
             let res: Result<(RuleId, Rule)> = Ok((nn, rule));
             res
-        }
+        },
     )(i)
 }
 
 #[derive(Debug)]
 struct RuleSet(HashMap<RuleId, Rule>);
 impl RuleSet {
-
-    fn parse<'a,I>(lines: I) -> Result<Self> where I:Iterator<Item=&'a &'a str> 
+    fn parse<'a, I>(lines: I) -> Result<Self>
+    where
+        I: Iterator<Item = &'a &'a str>,
     {
         let mut rules = HashMap::new();
         for l in lines {
             let (id, rule) = rule(l)
-                .map_err(|e| anyhow!("parsing error: {}", e.to_string()))?.1;
+                .map_err(|e| anyhow!("parsing error: {}", e.to_string()))?
+                .1;
             rules.insert(id, rule);
         }
         Ok(RuleSet(rules))
     }
 
-    fn evaluate_ordered<'a>(&self, i:&'a str, ids: &[RuleId]) -> IResult<&'a str, ()> {
-        let mut remaining:&str = i;
+    fn evaluate_ordered<'a>(&self, i: &'a str, ids: &[RuleId]) -> IResult<&'a str, ()> {
+        let mut remaining: &str = i;
         for id in ids {
             let rule = self.0.get(id).unwrap();
             let res = self.evaluate_rule(remaining, rule)?;
             remaining = res.0
-        };
+        }
         Ok((remaining, ()))
     }
 
@@ -98,52 +105,54 @@ impl RuleSet {
         match rule {
             Rule::Literal(c) => map_res(char(*c), |_| result_ok())(i),
             Rule::Ordered(ids) => {
-                let mut remaining:&str = i;
+                let mut remaining: &str = i;
                 for id in ids {
                     let rule = self.0.get(id).unwrap();
                     let res = self.evaluate_rule(remaining, rule)?;
                     remaining = res.0
-                };
-                Ok((remaining, ()))                
+                }
+                Ok((remaining, ()))
             }
-            Rule::Either((a,b)) => {
+            Rule::Either((a, b)) => {
                 if let Ok(res_a) = self.evaluate_ordered(i, a) {
                     Ok(res_a)
                 } else if let Ok(res_b) = self.evaluate_ordered(i, b) {
                     Ok(res_b)
                 } else {
-                    Err(nom::Err::Failure(nom::error::Error::new(i, nom::error::ErrorKind::TooLarge)))
+                    Err(nom::Err::Failure(nom::error::Error::new(
+                        i,
+                        nom::error::ErrorKind::TooLarge,
+                    )))
                 }
             }
-            _ => Err(nom::Err::Failure(nom::error::Error::new(i, nom::error::ErrorKind::TooLarge)))
+            _ => Err(nom::Err::Failure(nom::error::Error::new(
+                i,
+                nom::error::ErrorKind::TooLarge,
+            ))),
         }
     }
 
-    // find if there's at least one rulechain the succeeds -- i.e. the input is valid.
-    fn matches(&self, i:&str) -> bool {
-        for r in self.0.values() {
-            if let Ok(res) = self.evaluate_rule(i, r) {
-                if res.0.len() == 0 {
-                    // complete
-                    return true
-                }
+    // check to see if the supplied line matches rule 0
+    fn matches_rule_0(&self, i: &str) -> bool {
+        let rule = self.0.get(&RuleId(0)).unwrap();
+        if let Ok(res) = self.evaluate_rule(i, rule) {
+            // needs to be a complete match -- no remaining input
+            if res.0.is_empty() {
+                return true;
             }
         }
         false
     }
-
-
 }
 
-
-fn part1(rules: &[&str], lines:&[&str]) -> Result<()> {
+fn part1(rules: &[&str], lines: &[&str]) -> Result<()> {
     let rules = RuleSet::parse(rules.iter());
     println!("{:?}", &rules);
 
     let rules = rules?;
     let mut count = 0;
     for i in lines.iter() {
-        let res = rules.matches(i);
+        let res = rules.matches_rule_0(i);
         if res {
             count += 1;
         }
@@ -152,7 +161,6 @@ fn part1(rules: &[&str], lines:&[&str]) -> Result<()> {
     println!("Matching inputs: {}", count);
     Ok(())
 }
-
 
 fn main() -> Result<()> {
     // test inputs
@@ -173,14 +181,12 @@ fn main() -> Result<()> {
     ];
     part1(&example_rules, &example_input)?;
 
-
     // part 1 actual
     let rules_string = std::fs::read_to_string("day19/rules.txt")?;
     let lines_string = std::fs::read_to_string("day19/lines.txt")?;
-    let rules:Vec<&str> = rules_string.lines().collect();
-    let lines:Vec<&str> = lines_string.lines().collect();
+    let rules: Vec<&str> = rules_string.lines().collect();
+    let lines: Vec<&str> = lines_string.lines().collect();
     part1(&rules, &lines)?;
-
 
     Ok(())
 }
