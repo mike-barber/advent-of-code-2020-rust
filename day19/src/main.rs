@@ -105,25 +105,36 @@ impl RuleSet {
         match rule {
             Rule::Literal(c) => map_res(char(*c), |_| result_ok())(i),
             Rule::Ordered(ids) => {
+                println!("Ordered: {:?}", ids);
                 let mut remaining: &str = i;
                 for id in ids {
                     let rule = self.0.get(id).unwrap();
-                    let res = self.evaluate_rule(remaining, rule)?;
+                    let result = self.evaluate_rule(remaining, rule);
+                    println!("  {} => {:?}", id.0, result);
+                    let res = result?;
                     remaining = res.0
                 }
                 Ok((remaining, ()))
             }
             Rule::Either((a, b)) => {
-                if let Ok(res_a) = self.evaluate_ordered(i, a) {
-                    Ok(res_a)
-                } else if let Ok(res_b) = self.evaluate_ordered(i, b) {
-                    Ok(res_b)
-                } else {
-                    Err(nom::Err::Failure(nom::error::Error::new(
-                        i,
-                        nom::error::ErrorKind::TooLarge,
-                    )))
-                }
+                println!("Either test: {:?} | {:?}", a,b);
+                let result_a = self.evaluate_ordered(i, a);
+                let result_b = self.evaluate_ordered(i, b);
+                println!("Either result: {:?} | {:?} ---", a,b);
+                println!("  a => {:?}", result_a);
+                println!("  b => {:?}", result_b);
+                let res = result_a.or(result_b);
+                // if let Ok(res_a) = self.evaluate_ordered(i, a) {
+                //     Ok(res_a)
+                // } else if let Ok(res_b) = self.evaluate_ordered(i, b) {
+                //     Ok(res_b)
+                // } else {
+                //     Err(nom::Err::Failure(nom::error::Error::new(
+                //         i,
+                //         nom::error::ErrorKind::TooLarge,
+                //     )))
+                // }
+                res
             }
         }
     }
@@ -176,28 +187,28 @@ fn main() -> Result<()> {
         r#"aaabbb"#,
         r#"aaaabbb"#,
     ];
-    part1(&example_rules, &example_input)?;
+    // part1(&example_rules, &example_input)?;
 
     // part 1 actual
-    println!("Part 1 ------------------------------------------------");
-    {
-        let rules_string = std::fs::read_to_string("day19/rules-part1.txt")?;
-        let lines_string = std::fs::read_to_string("day19/lines.txt")?;
-        let rules: Vec<&str> = rules_string.lines().collect();
-        let lines: Vec<&str> = lines_string.lines().collect();
-        part1(&rules, &lines)?;
-    }
+    // println!("Part 1 ------------------------------------------------");
+    // {
+    //     let rules_string = std::fs::read_to_string("day19/rules-part1.txt")?;
+    //     let lines_string = std::fs::read_to_string("day19/lines.txt")?;
+    //     let rules: Vec<&str> = rules_string.lines().collect();
+    //     let lines: Vec<&str> = lines_string.lines().collect();
+    //     part1(&rules, &lines)?;
+    // }
 
     // part 2 actual
-    println!("Part 2 ------------------------------------------------");
-    {
-        let rules_string = std::fs::read_to_string("day19/rules-part2.txt")?;
-        let lines_string = std::fs::read_to_string("day19/lines.txt")?;
-        let rules: Vec<&str> = rules_string.lines().collect();
-        let lines: Vec<&str> = lines_string.lines().collect();
-        part1(&rules, &lines)?;
-        // 141 is the WRONG answer
-    }
+    // println!("Part 2 ------------------------------------------------");
+    // {
+    //     let rules_string = std::fs::read_to_string("day19/rules-part2.txt")?;
+    //     let lines_string = std::fs::read_to_string("day19/lines.txt")?;
+    //     let rules: Vec<&str> = rules_string.lines().collect();
+    //     let lines: Vec<&str> = lines_string.lines().collect();
+    //     part1(&rules, &lines)?;
+    //     // 141 is the WRONG answer
+    // }
 
     fn part2_test(rules_path: &str, lines_path: &str) -> Result<()> {
         let rules_string = std::fs::read_to_string(rules_path)?;
@@ -208,12 +219,18 @@ fn main() -> Result<()> {
         Ok(())
     }
 
-    println!("Part 2 test A -------------");
-    part2_test("day19/example-rules-part2-a.txt", "day19/example-input-part2.txt")?;
-    println!("Part 2 test B -------------");
-    part2_test("day19/example-rules-part2-b.txt", "day19/example-input-part2.txt")?;
+    // println!("Part 2 test A -------------");
+    // part2_test("day19/example-rules-part2-a.txt", "day19/example-input-part2.txt")?;
+    // println!("Part 2 test B -------------");
+    // part2_test("day19/example-rules-part2-b.txt", "day19/example-input-part2.txt")?;
+    
+    println!();
+    println!();
+    println!();
+    println!();
     println!("Part 2 test B these should all match -------------");
-    part2_test("day19/example-rules-part2-b.txt", "day19/example-input-part2-all-match.txt")?;
+    //part2_test("day19/example-rules-part2-b.txt", "day19/example-input-part2-all-match.txt")?;
+    part2_test("day19/example-rules-part2-b.txt", "day19/example-input-part2-fail-should-match.txt")?;
 
     Ok(())
 }

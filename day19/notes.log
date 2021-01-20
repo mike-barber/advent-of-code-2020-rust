@@ -1,0 +1,930 @@
+Part 2 test B these should all match -------------
+Ordered: [RuleId(8), RuleId(11)]
+Either test: [RuleId(42)] | [RuleId(42), RuleId(8)]
+Either test: [RuleId(9), RuleId(14)] | [RuleId(10), RuleId(1)]
+Either test: [RuleId(14), RuleId(27)] | [RuleId(1), RuleId(26)]
+Either test: [RuleId(1), RuleId(6)] | [RuleId(14), RuleId(18)]
+Either test: [RuleId(14), RuleId(14)] | [RuleId(1), RuleId(14)]
+Either result: [RuleId(14), RuleId(14)] | [RuleId(1), RuleId(14)] ---
+  a => Ok(("bbaabbbbbabbbbbbaabaaabaaa", ()))
+  b => Err(Error(Error { input: "bbbbaabbbbbabbbbbbaabaaabaaa", code: Char }))
+Either result: [RuleId(1), RuleId(6)] | [RuleId(14), RuleId(18)] ---
+  a => Ok(("bbaabbbbbabbbbbbaabaaabaaa", ()))
+  b => Err(Error(Error { input: "abbbbaabbbbbabbbbbbaabaaabaaa", code: Char }))
+Either result: [RuleId(14), RuleId(27)] | [RuleId(1), RuleId(26)] ---
+  a => Ok(("bbaabbbbbabbbbbbaabaaabaaa", ()))
+  b => Err(Error(Error { input: "babbbbaabbbbbabbbbbbaabaaabaaa", code: Char }))
+Either test: [RuleId(23), RuleId(14)] | [RuleId(28), RuleId(1)]
+Either test: [RuleId(25), RuleId(1)] | [RuleId(22), RuleId(14)]
+Either test: [RuleId(1), RuleId(1)] | [RuleId(1), RuleId(14)]
+Either result: [RuleId(1), RuleId(1)] | [RuleId(1), RuleId(14)] ---
+  a => Err(Error(Error { input: "babbbbaabbbbbabbbbbbaabaaabaaa", code: Char }))
+  b => Err(Error(Error { input: "babbbbaabbbbbabbbbbbaabaaabaaa", code: Char }))
+Ordered: [RuleId(14), RuleId(14)]
+  14 => Ok(("abbbbaabbbbbabbbbbbaabaaabaaa", ()))
+  14 => Err(Error(Error { input: "abbbbaabbbbbabbbbbbaabaaabaaa", code: Char }))
+Either result: [RuleId(25), RuleId(1)] | [RuleId(22), RuleId(14)] ---
+  a => Err(Error(Error { input: "babbbbaabbbbbabbbbbbaabaaabaaa", code: Char }))
+  b => Err(Error(Error { input: "abbbbaabbbbbabbbbbbaabaaabaaa", code: Char }))
+Ordered: [RuleId(16), RuleId(1)]
+Either test: [RuleId(15), RuleId(1)] | [RuleId(14), RuleId(14)]
+Either test: [RuleId(1)] | [RuleId(14)]
+Either result: [RuleId(1)] | [RuleId(14)] ---
+  a => Err(Error(Error { input: "babbbbaabbbbbabbbbbbaabaaabaaa", code: Char }))
+  b => Ok(("abbbbaabbbbbabbbbbbaabaaabaaa", ()))
+Either result: [RuleId(15), RuleId(1)] | [RuleId(14), RuleId(14)] ---
+  a => Ok(("bbbbaabbbbbabbbbbbaabaaabaaa", ()))
+  b => Err(Error(Error { input: "abbbbaabbbbbabbbbbbaabaaabaaa", code: Char }))
+  16 => Ok(("bbbbaabbbbbabbbbbbaabaaabaaa", ()))
+  1 => Err(Error(Error { input: "bbbbaabbbbbabbbbbbaabaaabaaa", code: Char }))
+Either result: [RuleId(23), RuleId(14)] | [RuleId(28), RuleId(1)] ---
+  a => Err(Error(Error { input: "abbbbaabbbbbabbbbbbaabaaabaaa", code: Char }))
+  b => Err(Error(Error { input: "bbbbaabbbbbabbbbbbaabaaabaaa", code: Char }))
+Either result: [RuleId(9), RuleId(14)] | [RuleId(10), RuleId(1)] ---
+  a => Ok(("baabbbbbabbbbbbaabaaabaaa", ()))
+  b => Err(Error(Error { input: "bbbbaabbbbbabbbbbbaabaaabaaa", code: Char }))
+Either test: [RuleId(9), RuleId(14)] | [RuleId(10), RuleId(1)]
+Either test: [RuleId(14), RuleId(27)] | [RuleId(1), RuleId(26)]
+Either test: [RuleId(1), RuleId(6)] | [RuleId(14), RuleId(18)]
+Either test: [RuleId(14), RuleId(14)] | [RuleId(1), RuleId(14)]
+Either result: [RuleId(14), RuleId(14)] | [RuleId(1), RuleId(14)] ---
+  a => Ok(("bbaabbbbbabbbbbbaabaaabaaa", ()))
+  b => Err(Error(Error { input: "bbbbaabbbbbabbbbbbaabaaabaaa", code: Char }))
+Either result: [RuleId(1), RuleId(6)] | [RuleId(14), RuleId(18)] ---
+  a => Ok(("bbaabbbbbabbbbbbaabaaabaaa", ()))
+  b => Err(Error(Error { input: "abbbbaabbbbbabbbbbbaabaaabaaa", code: Char }))
+Either result: [RuleId(14), RuleId(27)] | [RuleId(1), RuleId(26)] ---
+  a => Ok(("bbaabbbbbabbbbbbaabaaabaaa", ()))
+  b => Err(Error(Error { input: "babbbbaabbbbbabbbbbbaabaaabaaa", code: Char }))
+Either test: [RuleId(23), RuleId(14)] | [RuleId(28), RuleId(1)]
+Either test: [RuleId(25), RuleId(1)] | [RuleId(22), RuleId(14)]
+Either test: [RuleId(1), RuleId(1)] | [RuleId(1), RuleId(14)]
+Either result: [RuleId(1), RuleId(1)] | [RuleId(1), RuleId(14)] ---
+  a => Err(Error(Error { input: "babbbbaabbbbbabbbbbbaabaaabaaa", code: Char }))
+  b => Err(Error(Error { input: "babbbbaabbbbbabbbbbbaabaaabaaa", code: Char }))
+Ordered: [RuleId(14), RuleId(14)]
+  14 => Ok(("abbbbaabbbbbabbbbbbaabaaabaaa", ()))
+  14 => Err(Error(Error { input: "abbbbaabbbbbabbbbbbaabaaabaaa", code: Char }))
+Either result: [RuleId(25), RuleId(1)] | [RuleId(22), RuleId(14)] ---
+  a => Err(Error(Error { input: "babbbbaabbbbbabbbbbbaabaaabaaa", code: Char }))
+  b => Err(Error(Error { input: "abbbbaabbbbbabbbbbbaabaaabaaa", code: Char }))
+Ordered: [RuleId(16), RuleId(1)]
+Either test: [RuleId(15), RuleId(1)] | [RuleId(14), RuleId(14)]
+Either test: [RuleId(1)] | [RuleId(14)]
+Either result: [RuleId(1)] | [RuleId(14)] ---
+  a => Err(Error(Error { input: "babbbbaabbbbbabbbbbbaabaaabaaa", code: Char }))
+  b => Ok(("abbbbaabbbbbabbbbbbaabaaabaaa", ()))
+Either result: [RuleId(15), RuleId(1)] | [RuleId(14), RuleId(14)] ---
+  a => Ok(("bbbbaabbbbbabbbbbbaabaaabaaa", ()))
+  b => Err(Error(Error { input: "abbbbaabbbbbabbbbbbaabaaabaaa", code: Char }))
+  16 => Ok(("bbbbaabbbbbabbbbbbaabaaabaaa", ()))
+  1 => Err(Error(Error { input: "bbbbaabbbbbabbbbbbaabaaabaaa", code: Char }))
+Either result: [RuleId(23), RuleId(14)] | [RuleId(28), RuleId(1)] ---
+  a => Err(Error(Error { input: "abbbbaabbbbbabbbbbbaabaaabaaa", code: Char }))
+  b => Err(Error(Error { input: "bbbbaabbbbbabbbbbbaabaaabaaa", code: Char }))
+Either result: [RuleId(9), RuleId(14)] | [RuleId(10), RuleId(1)] ---
+  a => Ok(("baabbbbbabbbbbbaabaaabaaa", ()))
+  b => Err(Error(Error { input: "bbbbaabbbbbabbbbbbaabaaabaaa", code: Char }))
+Either test: [RuleId(42)] | [RuleId(42), RuleId(8)]
+Either test: [RuleId(9), RuleId(14)] | [RuleId(10), RuleId(1)]
+Either test: [RuleId(14), RuleId(27)] | [RuleId(1), RuleId(26)]
+Either test: [RuleId(1), RuleId(6)] | [RuleId(14), RuleId(18)]
+Either test: [RuleId(14), RuleId(14)] | [RuleId(1), RuleId(14)]
+Either result: [RuleId(14), RuleId(14)] | [RuleId(1), RuleId(14)] ---
+  a => Err(Error(Error { input: "abbbbbabbbbbbaabaaabaaa", code: Char }))
+  b => Ok(("bbbbabbbbbbaabaaabaaa", ()))
+Either result: [RuleId(1), RuleId(6)] | [RuleId(14), RuleId(18)] ---
+  a => Ok(("bbbbabbbbbbaabaaabaaa", ()))
+  b => Err(Error(Error { input: "aabbbbbabbbbbbaabaaabaaa", code: Char }))
+Either result: [RuleId(14), RuleId(27)] | [RuleId(1), RuleId(26)] ---
+  a => Ok(("bbbbabbbbbbaabaaabaaa", ()))
+  b => Err(Error(Error { input: "baabbbbbabbbbbbaabaaabaaa", code: Char }))
+Either test: [RuleId(23), RuleId(14)] | [RuleId(28), RuleId(1)]
+Either test: [RuleId(25), RuleId(1)] | [RuleId(22), RuleId(14)]
+Either test: [RuleId(1), RuleId(1)] | [RuleId(1), RuleId(14)]
+Either result: [RuleId(1), RuleId(1)] | [RuleId(1), RuleId(14)] ---
+  a => Err(Error(Error { input: "baabbbbbabbbbbbaabaaabaaa", code: Char }))
+  b => Err(Error(Error { input: "baabbbbbabbbbbbaabaaabaaa", code: Char }))
+Ordered: [RuleId(14), RuleId(14)]
+  14 => Ok(("aabbbbbabbbbbbaabaaabaaa", ()))
+  14 => Err(Error(Error { input: "aabbbbbabbbbbbaabaaabaaa", code: Char }))
+Either result: [RuleId(25), RuleId(1)] | [RuleId(22), RuleId(14)] ---
+  a => Err(Error(Error { input: "baabbbbbabbbbbbaabaaabaaa", code: Char }))
+  b => Err(Error(Error { input: "aabbbbbabbbbbbaabaaabaaa", code: Char }))
+Ordered: [RuleId(16), RuleId(1)]
+Either test: [RuleId(15), RuleId(1)] | [RuleId(14), RuleId(14)]
+Either test: [RuleId(1)] | [RuleId(14)]
+Either result: [RuleId(1)] | [RuleId(14)] ---
+  a => Err(Error(Error { input: "baabbbbbabbbbbbaabaaabaaa", code: Char }))
+  b => Ok(("aabbbbbabbbbbbaabaaabaaa", ()))
+Either result: [RuleId(15), RuleId(1)] | [RuleId(14), RuleId(14)] ---
+  a => Ok(("abbbbbabbbbbbaabaaabaaa", ()))
+  b => Err(Error(Error { input: "aabbbbbabbbbbbaabaaabaaa", code: Char }))
+  16 => Ok(("abbbbbabbbbbbaabaaabaaa", ()))
+  1 => Ok(("bbbbbabbbbbbaabaaabaaa", ()))
+Either result: [RuleId(23), RuleId(14)] | [RuleId(28), RuleId(1)] ---
+  a => Err(Error(Error { input: "aabbbbbabbbbbbaabaaabaaa", code: Char }))
+  b => Err(Error(Error { input: "bbbbbabbbbbbaabaaabaaa", code: Char }))
+Either result: [RuleId(9), RuleId(14)] | [RuleId(10), RuleId(1)] ---
+  a => Ok(("bbbabbbbbbaabaaabaaa", ()))
+  b => Err(Error(Error { input: "bbbbbabbbbbbaabaaabaaa", code: Char }))
+Either test: [RuleId(9), RuleId(14)] | [RuleId(10), RuleId(1)]
+Either test: [RuleId(14), RuleId(27)] | [RuleId(1), RuleId(26)]
+Either test: [RuleId(1), RuleId(6)] | [RuleId(14), RuleId(18)]
+Either test: [RuleId(14), RuleId(14)] | [RuleId(1), RuleId(14)]
+Either result: [RuleId(14), RuleId(14)] | [RuleId(1), RuleId(14)] ---
+  a => Err(Error(Error { input: "abbbbbabbbbbbaabaaabaaa", code: Char }))
+  b => Ok(("bbbbabbbbbbaabaaabaaa", ()))
+Either result: [RuleId(1), RuleId(6)] | [RuleId(14), RuleId(18)] ---
+  a => Ok(("bbbbabbbbbbaabaaabaaa", ()))
+  b => Err(Error(Error { input: "aabbbbbabbbbbbaabaaabaaa", code: Char }))
+Either result: [RuleId(14), RuleId(27)] | [RuleId(1), RuleId(26)] ---
+  a => Ok(("bbbbabbbbbbaabaaabaaa", ()))
+  b => Err(Error(Error { input: "baabbbbbabbbbbbaabaaabaaa", code: Char }))
+Either test: [RuleId(23), RuleId(14)] | [RuleId(28), RuleId(1)]
+Either test: [RuleId(25), RuleId(1)] | [RuleId(22), RuleId(14)]
+Either test: [RuleId(1), RuleId(1)] | [RuleId(1), RuleId(14)]
+Either result: [RuleId(1), RuleId(1)] | [RuleId(1), RuleId(14)] ---
+  a => Err(Error(Error { input: "baabbbbbabbbbbbaabaaabaaa", code: Char }))
+  b => Err(Error(Error { input: "baabbbbbabbbbbbaabaaabaaa", code: Char }))
+Ordered: [RuleId(14), RuleId(14)]
+  14 => Ok(("aabbbbbabbbbbbaabaaabaaa", ()))
+  14 => Err(Error(Error { input: "aabbbbbabbbbbbaabaaabaaa", code: Char }))
+Either result: [RuleId(25), RuleId(1)] | [RuleId(22), RuleId(14)] ---
+  a => Err(Error(Error { input: "baabbbbbabbbbbbaabaaabaaa", code: Char }))
+  b => Err(Error(Error { input: "aabbbbbabbbbbbaabaaabaaa", code: Char }))
+Ordered: [RuleId(16), RuleId(1)]
+Either test: [RuleId(15), RuleId(1)] | [RuleId(14), RuleId(14)]
+Either test: [RuleId(1)] | [RuleId(14)]
+Either result: [RuleId(1)] | [RuleId(14)] ---
+  a => Err(Error(Error { input: "baabbbbbabbbbbbaabaaabaaa", code: Char }))
+  b => Ok(("aabbbbbabbbbbbaabaaabaaa", ()))
+Either result: [RuleId(15), RuleId(1)] | [RuleId(14), RuleId(14)] ---
+  a => Ok(("abbbbbabbbbbbaabaaabaaa", ()))
+  b => Err(Error(Error { input: "aabbbbbabbbbbbaabaaabaaa", code: Char }))
+  16 => Ok(("abbbbbabbbbbbaabaaabaaa", ()))
+  1 => Ok(("bbbbbabbbbbbaabaaabaaa", ()))
+Either result: [RuleId(23), RuleId(14)] | [RuleId(28), RuleId(1)] ---
+  a => Err(Error(Error { input: "aabbbbbabbbbbbaabaaabaaa", code: Char }))
+  b => Err(Error(Error { input: "bbbbbabbbbbbaabaaabaaa", code: Char }))
+Either result: [RuleId(9), RuleId(14)] | [RuleId(10), RuleId(1)] ---
+  a => Ok(("bbbabbbbbbaabaaabaaa", ()))
+  b => Err(Error(Error { input: "bbbbbabbbbbbaabaaabaaa", code: Char }))
+Either test: [RuleId(42)] | [RuleId(42), RuleId(8)]
+Either test: [RuleId(9), RuleId(14)] | [RuleId(10), RuleId(1)]
+Either test: [RuleId(14), RuleId(27)] | [RuleId(1), RuleId(26)]
+Either test: [RuleId(1), RuleId(6)] | [RuleId(14), RuleId(18)]
+Ordered: [RuleId(15), RuleId(15)]
+Either test: [RuleId(1)] | [RuleId(14)]
+Either result: [RuleId(1)] | [RuleId(14)] ---
+  a => Err(Error(Error { input: "babbbbbbaabaaabaaa", code: Char }))
+  b => Ok(("abbbbbbaabaaabaaa", ()))
+  15 => Ok(("abbbbbbaabaaabaaa", ()))
+Either test: [RuleId(1)] | [RuleId(14)]
+Either result: [RuleId(1)] | [RuleId(14)] ---
+  a => Ok(("bbbbbbaabaaabaaa", ()))
+  b => Err(Error(Error { input: "abbbbbbaabaaabaaa", code: Char }))
+  15 => Ok(("bbbbbbaabaaabaaa", ()))
+Either result: [RuleId(1), RuleId(6)] | [RuleId(14), RuleId(18)] ---
+  a => Err(Error(Error { input: "bbabbbbbbaabaaabaaa", code: Char }))
+  b => Ok(("bbbbbbaabaaabaaa", ()))
+Either result: [RuleId(14), RuleId(27)] | [RuleId(1), RuleId(26)] ---
+  a => Ok(("bbbbbbaabaaabaaa", ()))
+  b => Err(Error(Error { input: "bbbabbbbbbaabaaabaaa", code: Char }))
+Either test: [RuleId(23), RuleId(14)] | [RuleId(28), RuleId(1)]
+Either test: [RuleId(25), RuleId(1)] | [RuleId(22), RuleId(14)]
+Either test: [RuleId(1), RuleId(1)] | [RuleId(1), RuleId(14)]
+Either result: [RuleId(1), RuleId(1)] | [RuleId(1), RuleId(14)] ---
+  a => Err(Error(Error { input: "bbbabbbbbbaabaaabaaa", code: Char }))
+  b => Err(Error(Error { input: "bbbabbbbbbaabaaabaaa", code: Char }))
+Ordered: [RuleId(14), RuleId(14)]
+  14 => Ok(("bbabbbbbbaabaaabaaa", ()))
+  14 => Ok(("babbbbbbaabaaabaaa", ()))
+Either result: [RuleId(25), RuleId(1)] | [RuleId(22), RuleId(14)] ---
+  a => Err(Error(Error { input: "bbbabbbbbbaabaaabaaa", code: Char }))
+  b => Ok(("abbbbbbaabaaabaaa", ()))
+Ordered: [RuleId(16), RuleId(1)]
+Either test: [RuleId(15), RuleId(1)] | [RuleId(14), RuleId(14)]
+Either test: [RuleId(1)] | [RuleId(14)]
+Either result: [RuleId(1)] | [RuleId(14)] ---
+  a => Err(Error(Error { input: "bbbabbbbbbaabaaabaaa", code: Char }))
+  b => Ok(("bbabbbbbbaabaaabaaa", ()))
+Either result: [RuleId(15), RuleId(1)] | [RuleId(14), RuleId(14)] ---
+  a => Err(Error(Error { input: "bbabbbbbbaabaaabaaa", code: Char }))
+  b => Ok(("babbbbbbaabaaabaaa", ()))
+  16 => Ok(("babbbbbbaabaaabaaa", ()))
+  1 => Err(Error(Error { input: "babbbbbbaabaaabaaa", code: Char }))
+Either result: [RuleId(23), RuleId(14)] | [RuleId(28), RuleId(1)] ---
+  a => Err(Error(Error { input: "abbbbbbaabaaabaaa", code: Char }))
+  b => Err(Error(Error { input: "babbbbbbaabaaabaaa", code: Char }))
+Either result: [RuleId(9), RuleId(14)] | [RuleId(10), RuleId(1)] ---
+  a => Ok(("bbbbbaabaaabaaa", ()))
+  b => Err(Error(Error { input: "babbbbbbaabaaabaaa", code: Char }))
+Either test: [RuleId(9), RuleId(14)] | [RuleId(10), RuleId(1)]
+Either test: [RuleId(14), RuleId(27)] | [RuleId(1), RuleId(26)]
+Either test: [RuleId(1), RuleId(6)] | [RuleId(14), RuleId(18)]
+Ordered: [RuleId(15), RuleId(15)]
+Either test: [RuleId(1)] | [RuleId(14)]
+Either result: [RuleId(1)] | [RuleId(14)] ---
+  a => Err(Error(Error { input: "babbbbbbaabaaabaaa", code: Char }))
+  b => Ok(("abbbbbbaabaaabaaa", ()))
+  15 => Ok(("abbbbbbaabaaabaaa", ()))
+Either test: [RuleId(1)] | [RuleId(14)]
+Either result: [RuleId(1)] | [RuleId(14)] ---
+  a => Ok(("bbbbbbaabaaabaaa", ()))
+  b => Err(Error(Error { input: "abbbbbbaabaaabaaa", code: Char }))
+  15 => Ok(("bbbbbbaabaaabaaa", ()))
+Either result: [RuleId(1), RuleId(6)] | [RuleId(14), RuleId(18)] ---
+  a => Err(Error(Error { input: "bbabbbbbbaabaaabaaa", code: Char }))
+  b => Ok(("bbbbbbaabaaabaaa", ()))
+Either result: [RuleId(14), RuleId(27)] | [RuleId(1), RuleId(26)] ---
+  a => Ok(("bbbbbbaabaaabaaa", ()))
+  b => Err(Error(Error { input: "bbbabbbbbbaabaaabaaa", code: Char }))
+Either test: [RuleId(23), RuleId(14)] | [RuleId(28), RuleId(1)]
+Either test: [RuleId(25), RuleId(1)] | [RuleId(22), RuleId(14)]
+Either test: [RuleId(1), RuleId(1)] | [RuleId(1), RuleId(14)]
+Either result: [RuleId(1), RuleId(1)] | [RuleId(1), RuleId(14)] ---
+  a => Err(Error(Error { input: "bbbabbbbbbaabaaabaaa", code: Char }))
+  b => Err(Error(Error { input: "bbbabbbbbbaabaaabaaa", code: Char }))
+Ordered: [RuleId(14), RuleId(14)]
+  14 => Ok(("bbabbbbbbaabaaabaaa", ()))
+  14 => Ok(("babbbbbbaabaaabaaa", ()))
+Either result: [RuleId(25), RuleId(1)] | [RuleId(22), RuleId(14)] ---
+  a => Err(Error(Error { input: "bbbabbbbbbaabaaabaaa", code: Char }))
+  b => Ok(("abbbbbbaabaaabaaa", ()))
+Ordered: [RuleId(16), RuleId(1)]
+Either test: [RuleId(15), RuleId(1)] | [RuleId(14), RuleId(14)]
+Either test: [RuleId(1)] | [RuleId(14)]
+Either result: [RuleId(1)] | [RuleId(14)] ---
+  a => Err(Error(Error { input: "bbbabbbbbbaabaaabaaa", code: Char }))
+  b => Ok(("bbabbbbbbaabaaabaaa", ()))
+Either result: [RuleId(15), RuleId(1)] | [RuleId(14), RuleId(14)] ---
+  a => Err(Error(Error { input: "bbabbbbbbaabaaabaaa", code: Char }))
+  b => Ok(("babbbbbbaabaaabaaa", ()))
+  16 => Ok(("babbbbbbaabaaabaaa", ()))
+  1 => Err(Error(Error { input: "babbbbbbaabaaabaaa", code: Char }))
+Either result: [RuleId(23), RuleId(14)] | [RuleId(28), RuleId(1)] ---
+  a => Err(Error(Error { input: "abbbbbbaabaaabaaa", code: Char }))
+  b => Err(Error(Error { input: "babbbbbbaabaaabaaa", code: Char }))
+Either result: [RuleId(9), RuleId(14)] | [RuleId(10), RuleId(1)] ---
+  a => Ok(("bbbbbaabaaabaaa", ()))
+  b => Err(Error(Error { input: "babbbbbbaabaaabaaa", code: Char }))
+Either test: [RuleId(42)] | [RuleId(42), RuleId(8)]
+Either test: [RuleId(9), RuleId(14)] | [RuleId(10), RuleId(1)]
+Either test: [RuleId(14), RuleId(27)] | [RuleId(1), RuleId(26)]
+Either test: [RuleId(1), RuleId(6)] | [RuleId(14), RuleId(18)]
+Ordered: [RuleId(15), RuleId(15)]
+Either test: [RuleId(1)] | [RuleId(14)]
+Either result: [RuleId(1)] | [RuleId(14)] ---
+  a => Err(Error(Error { input: "bbbaabaaabaaa", code: Char }))
+  b => Ok(("bbaabaaabaaa", ()))
+  15 => Ok(("bbaabaaabaaa", ()))
+Either test: [RuleId(1)] | [RuleId(14)]
+Either result: [RuleId(1)] | [RuleId(14)] ---
+  a => Err(Error(Error { input: "bbaabaaabaaa", code: Char }))
+  b => Ok(("baabaaabaaa", ()))
+  15 => Ok(("baabaaabaaa", ()))
+Either result: [RuleId(1), RuleId(6)] | [RuleId(14), RuleId(18)] ---
+  a => Err(Error(Error { input: "bbbbaabaaabaaa", code: Char }))
+  b => Ok(("baabaaabaaa", ()))
+Either result: [RuleId(14), RuleId(27)] | [RuleId(1), RuleId(26)] ---
+  a => Ok(("baabaaabaaa", ()))
+  b => Err(Error(Error { input: "bbbbbaabaaabaaa", code: Char }))
+Either test: [RuleId(23), RuleId(14)] | [RuleId(28), RuleId(1)]
+Either test: [RuleId(25), RuleId(1)] | [RuleId(22), RuleId(14)]
+Either test: [RuleId(1), RuleId(1)] | [RuleId(1), RuleId(14)]
+Either result: [RuleId(1), RuleId(1)] | [RuleId(1), RuleId(14)] ---
+  a => Err(Error(Error { input: "bbbbbaabaaabaaa", code: Char }))
+  b => Err(Error(Error { input: "bbbbbaabaaabaaa", code: Char }))
+Ordered: [RuleId(14), RuleId(14)]
+  14 => Ok(("bbbbaabaaabaaa", ()))
+  14 => Ok(("bbbaabaaabaaa", ()))
+Either result: [RuleId(25), RuleId(1)] | [RuleId(22), RuleId(14)] ---
+  a => Err(Error(Error { input: "bbbbbaabaaabaaa", code: Char }))
+  b => Ok(("bbaabaaabaaa", ()))
+Ordered: [RuleId(16), RuleId(1)]
+Either test: [RuleId(15), RuleId(1)] | [RuleId(14), RuleId(14)]
+Either test: [RuleId(1)] | [RuleId(14)]
+Either result: [RuleId(1)] | [RuleId(14)] ---
+  a => Err(Error(Error { input: "bbbbbaabaaabaaa", code: Char }))
+  b => Ok(("bbbbaabaaabaaa", ()))
+Either result: [RuleId(15), RuleId(1)] | [RuleId(14), RuleId(14)] ---
+  a => Err(Error(Error { input: "bbbbaabaaabaaa", code: Char }))
+  b => Ok(("bbbaabaaabaaa", ()))
+  16 => Ok(("bbbaabaaabaaa", ()))
+  1 => Err(Error(Error { input: "bbbaabaaabaaa", code: Char }))
+Either result: [RuleId(23), RuleId(14)] | [RuleId(28), RuleId(1)] ---
+  a => Ok(("baabaaabaaa", ()))
+  b => Err(Error(Error { input: "bbbaabaaabaaa", code: Char }))
+Either result: [RuleId(9), RuleId(14)] | [RuleId(10), RuleId(1)] ---
+  a => Ok(("aabaaabaaa", ()))
+  b => Err(Error(Error { input: "baabaaabaaa", code: Char }))
+Either test: [RuleId(9), RuleId(14)] | [RuleId(10), RuleId(1)]
+Either test: [RuleId(14), RuleId(27)] | [RuleId(1), RuleId(26)]
+Either test: [RuleId(1), RuleId(6)] | [RuleId(14), RuleId(18)]
+Ordered: [RuleId(15), RuleId(15)]
+Either test: [RuleId(1)] | [RuleId(14)]
+Either result: [RuleId(1)] | [RuleId(14)] ---
+  a => Err(Error(Error { input: "bbbaabaaabaaa", code: Char }))
+  b => Ok(("bbaabaaabaaa", ()))
+  15 => Ok(("bbaabaaabaaa", ()))
+Either test: [RuleId(1)] | [RuleId(14)]
+Either result: [RuleId(1)] | [RuleId(14)] ---
+  a => Err(Error(Error { input: "bbaabaaabaaa", code: Char }))
+  b => Ok(("baabaaabaaa", ()))
+  15 => Ok(("baabaaabaaa", ()))
+Either result: [RuleId(1), RuleId(6)] | [RuleId(14), RuleId(18)] ---
+  a => Err(Error(Error { input: "bbbbaabaaabaaa", code: Char }))
+  b => Ok(("baabaaabaaa", ()))
+Either result: [RuleId(14), RuleId(27)] | [RuleId(1), RuleId(26)] ---
+  a => Ok(("baabaaabaaa", ()))
+  b => Err(Error(Error { input: "bbbbbaabaaabaaa", code: Char }))
+Either test: [RuleId(23), RuleId(14)] | [RuleId(28), RuleId(1)]
+Either test: [RuleId(25), RuleId(1)] | [RuleId(22), RuleId(14)]
+Either test: [RuleId(1), RuleId(1)] | [RuleId(1), RuleId(14)]
+Either result: [RuleId(1), RuleId(1)] | [RuleId(1), RuleId(14)] ---
+  a => Err(Error(Error { input: "bbbbbaabaaabaaa", code: Char }))
+  b => Err(Error(Error { input: "bbbbbaabaaabaaa", code: Char }))
+Ordered: [RuleId(14), RuleId(14)]
+  14 => Ok(("bbbbaabaaabaaa", ()))
+  14 => Ok(("bbbaabaaabaaa", ()))
+Either result: [RuleId(25), RuleId(1)] | [RuleId(22), RuleId(14)] ---
+  a => Err(Error(Error { input: "bbbbbaabaaabaaa", code: Char }))
+  b => Ok(("bbaabaaabaaa", ()))
+Ordered: [RuleId(16), RuleId(1)]
+Either test: [RuleId(15), RuleId(1)] | [RuleId(14), RuleId(14)]
+Either test: [RuleId(1)] | [RuleId(14)]
+Either result: [RuleId(1)] | [RuleId(14)] ---
+  a => Err(Error(Error { input: "bbbbbaabaaabaaa", code: Char }))
+  b => Ok(("bbbbaabaaabaaa", ()))
+Either result: [RuleId(15), RuleId(1)] | [RuleId(14), RuleId(14)] ---
+  a => Err(Error(Error { input: "bbbbaabaaabaaa", code: Char }))
+  b => Ok(("bbbaabaaabaaa", ()))
+  16 => Ok(("bbbaabaaabaaa", ()))
+  1 => Err(Error(Error { input: "bbbaabaaabaaa", code: Char }))
+Either result: [RuleId(23), RuleId(14)] | [RuleId(28), RuleId(1)] ---
+  a => Ok(("baabaaabaaa", ()))
+  b => Err(Error(Error { input: "bbbaabaaabaaa", code: Char }))
+Either result: [RuleId(9), RuleId(14)] | [RuleId(10), RuleId(1)] ---
+  a => Ok(("aabaaabaaa", ()))
+  b => Err(Error(Error { input: "baabaaabaaa", code: Char }))
+Either test: [RuleId(42)] | [RuleId(42), RuleId(8)]
+Either test: [RuleId(9), RuleId(14)] | [RuleId(10), RuleId(1)]
+Either test: [RuleId(14), RuleId(27)] | [RuleId(1), RuleId(26)]
+Either test: [RuleId(14), RuleId(22)] | [RuleId(1), RuleId(20)]
+Either test: [RuleId(14), RuleId(14)] | [RuleId(1), RuleId(15)]
+Either result: [RuleId(14), RuleId(14)] | [RuleId(1), RuleId(15)] ---
+  a => Err(Error(Error { input: "aaabaaa", code: Char }))
+  b => Err(Error(Error { input: "baaabaaa", code: Char }))
+Either result: [RuleId(14), RuleId(22)] | [RuleId(1), RuleId(20)] ---
+  a => Err(Error(Error { input: "abaaabaaa", code: Char }))
+  b => Err(Error(Error { input: "baaabaaa", code: Char }))
+Either result: [RuleId(14), RuleId(27)] | [RuleId(1), RuleId(26)] ---
+  a => Err(Error(Error { input: "aabaaabaaa", code: Char }))
+  b => Err(Error(Error { input: "baaabaaa", code: Char }))
+Either test: [RuleId(23), RuleId(14)] | [RuleId(28), RuleId(1)]
+Either test: [RuleId(25), RuleId(1)] | [RuleId(22), RuleId(14)]
+Either test: [RuleId(1), RuleId(1)] | [RuleId(1), RuleId(14)]
+Either result: [RuleId(1), RuleId(1)] | [RuleId(1), RuleId(14)] ---
+  a => Ok(("baaabaaa", ()))
+  b => Err(Error(Error { input: "abaaabaaa", code: Char }))
+Ordered: [RuleId(14), RuleId(14)]
+  14 => Err(Error(Error { input: "aabaaabaaa", code: Char }))
+Either result: [RuleId(25), RuleId(1)] | [RuleId(22), RuleId(14)] ---
+  a => Err(Error(Error { input: "baaabaaa", code: Char }))
+  b => Err(Error(Error { input: "aabaaabaaa", code: Char }))
+Ordered: [RuleId(16), RuleId(1)]
+Either test: [RuleId(15), RuleId(1)] | [RuleId(14), RuleId(14)]
+Either test: [RuleId(1)] | [RuleId(14)]
+Either result: [RuleId(1)] | [RuleId(14)] ---
+  a => Ok(("abaaabaaa", ()))
+  b => Err(Error(Error { input: "aabaaabaaa", code: Char }))
+Either result: [RuleId(15), RuleId(1)] | [RuleId(14), RuleId(14)] ---
+  a => Ok(("baaabaaa", ()))
+  b => Err(Error(Error { input: "aabaaabaaa", code: Char }))
+  16 => Ok(("baaabaaa", ()))
+  1 => Err(Error(Error { input: "baaabaaa", code: Char }))
+Either result: [RuleId(23), RuleId(14)] | [RuleId(28), RuleId(1)] ---
+  a => Err(Error(Error { input: "aabaaabaaa", code: Char }))
+  b => Err(Error(Error { input: "baaabaaa", code: Char }))
+Either result: [RuleId(9), RuleId(14)] | [RuleId(10), RuleId(1)] ---
+  a => Err(Error(Error { input: "baaabaaa", code: Char }))
+  b => Err(Error(Error { input: "baaabaaa", code: Char }))
+Either test: [RuleId(9), RuleId(14)] | [RuleId(10), RuleId(1)]
+Either test: [RuleId(14), RuleId(27)] | [RuleId(1), RuleId(26)]
+Either test: [RuleId(14), RuleId(22)] | [RuleId(1), RuleId(20)]
+Either test: [RuleId(14), RuleId(14)] | [RuleId(1), RuleId(15)]
+Either result: [RuleId(14), RuleId(14)] | [RuleId(1), RuleId(15)] ---
+  a => Err(Error(Error { input: "aaabaaa", code: Char }))
+  b => Err(Error(Error { input: "baaabaaa", code: Char }))
+Either result: [RuleId(14), RuleId(22)] | [RuleId(1), RuleId(20)] ---
+  a => Err(Error(Error { input: "abaaabaaa", code: Char }))
+  b => Err(Error(Error { input: "baaabaaa", code: Char }))
+Either result: [RuleId(14), RuleId(27)] | [RuleId(1), RuleId(26)] ---
+  a => Err(Error(Error { input: "aabaaabaaa", code: Char }))
+  b => Err(Error(Error { input: "baaabaaa", code: Char }))
+Either test: [RuleId(23), RuleId(14)] | [RuleId(28), RuleId(1)]
+Either test: [RuleId(25), RuleId(1)] | [RuleId(22), RuleId(14)]
+Either test: [RuleId(1), RuleId(1)] | [RuleId(1), RuleId(14)]
+Either result: [RuleId(1), RuleId(1)] | [RuleId(1), RuleId(14)] ---
+  a => Ok(("baaabaaa", ()))
+  b => Err(Error(Error { input: "abaaabaaa", code: Char }))
+Ordered: [RuleId(14), RuleId(14)]
+  14 => Err(Error(Error { input: "aabaaabaaa", code: Char }))
+Either result: [RuleId(25), RuleId(1)] | [RuleId(22), RuleId(14)] ---
+  a => Err(Error(Error { input: "baaabaaa", code: Char }))
+  b => Err(Error(Error { input: "aabaaabaaa", code: Char }))
+Ordered: [RuleId(16), RuleId(1)]
+Either test: [RuleId(15), RuleId(1)] | [RuleId(14), RuleId(14)]
+Either test: [RuleId(1)] | [RuleId(14)]
+Either result: [RuleId(1)] | [RuleId(14)] ---
+  a => Ok(("abaaabaaa", ()))
+  b => Err(Error(Error { input: "aabaaabaaa", code: Char }))
+Either result: [RuleId(15), RuleId(1)] | [RuleId(14), RuleId(14)] ---
+  a => Ok(("baaabaaa", ()))
+  b => Err(Error(Error { input: "aabaaabaaa", code: Char }))
+  16 => Ok(("baaabaaa", ()))
+  1 => Err(Error(Error { input: "baaabaaa", code: Char }))
+Either result: [RuleId(23), RuleId(14)] | [RuleId(28), RuleId(1)] ---
+  a => Err(Error(Error { input: "aabaaabaaa", code: Char }))
+  b => Err(Error(Error { input: "baaabaaa", code: Char }))
+Either result: [RuleId(9), RuleId(14)] | [RuleId(10), RuleId(1)] ---
+  a => Err(Error(Error { input: "baaabaaa", code: Char }))
+  b => Err(Error(Error { input: "baaabaaa", code: Char }))
+Either result: [RuleId(42)] | [RuleId(42), RuleId(8)] ---
+  a => Err(Error(Error { input: "baaabaaa", code: Char }))
+  b => Err(Error(Error { input: "baaabaaa", code: Char }))
+Either result: [RuleId(42)] | [RuleId(42), RuleId(8)] ---
+  a => Ok(("aabaaabaaa", ()))
+  b => Err(Error(Error { input: "baaabaaa", code: Char }))
+Either result: [RuleId(42)] | [RuleId(42), RuleId(8)] ---
+  a => Ok(("bbbbbaabaaabaaa", ()))
+  b => Ok(("aabaaabaaa", ()))
+Either result: [RuleId(42)] | [RuleId(42), RuleId(8)] ---
+  a => Ok(("bbbabbbbbbaabaaabaaa", ()))
+  b => Ok(("bbbbbaabaaabaaa", ()))
+Either result: [RuleId(42)] | [RuleId(42), RuleId(8)] ---
+  a => Ok(("baabbbbbabbbbbbaabaaabaaa", ()))
+  b => Ok(("bbbabbbbbbaabaaabaaa", ()))
+  8 => Ok(("baabbbbbabbbbbbaabaaabaaa", ()))
+Either test: [RuleId(42), RuleId(31)] | [RuleId(42), RuleId(11), RuleId(31)]
+Either test: [RuleId(9), RuleId(14)] | [RuleId(10), RuleId(1)]
+Either test: [RuleId(14), RuleId(27)] | [RuleId(1), RuleId(26)]
+Either test: [RuleId(1), RuleId(6)] | [RuleId(14), RuleId(18)]
+Either test: [RuleId(14), RuleId(14)] | [RuleId(1), RuleId(14)]
+Either result: [RuleId(14), RuleId(14)] | [RuleId(1), RuleId(14)] ---
+  a => Err(Error(Error { input: "abbbbbabbbbbbaabaaabaaa", code: Char }))
+  b => Ok(("bbbbabbbbbbaabaaabaaa", ()))
+Either result: [RuleId(1), RuleId(6)] | [RuleId(14), RuleId(18)] ---
+  a => Ok(("bbbbabbbbbbaabaaabaaa", ()))
+  b => Err(Error(Error { input: "aabbbbbabbbbbbaabaaabaaa", code: Char }))
+Either result: [RuleId(14), RuleId(27)] | [RuleId(1), RuleId(26)] ---
+  a => Ok(("bbbbabbbbbbaabaaabaaa", ()))
+  b => Err(Error(Error { input: "baabbbbbabbbbbbaabaaabaaa", code: Char }))
+Either test: [RuleId(23), RuleId(14)] | [RuleId(28), RuleId(1)]
+Either test: [RuleId(25), RuleId(1)] | [RuleId(22), RuleId(14)]
+Either test: [RuleId(1), RuleId(1)] | [RuleId(1), RuleId(14)]
+Either result: [RuleId(1), RuleId(1)] | [RuleId(1), RuleId(14)] ---
+  a => Err(Error(Error { input: "baabbbbbabbbbbbaabaaabaaa", code: Char }))
+  b => Err(Error(Error { input: "baabbbbbabbbbbbaabaaabaaa", code: Char }))
+Ordered: [RuleId(14), RuleId(14)]
+  14 => Ok(("aabbbbbabbbbbbaabaaabaaa", ()))
+  14 => Err(Error(Error { input: "aabbbbbabbbbbbaabaaabaaa", code: Char }))
+Either result: [RuleId(25), RuleId(1)] | [RuleId(22), RuleId(14)] ---
+  a => Err(Error(Error { input: "baabbbbbabbbbbbaabaaabaaa", code: Char }))
+  b => Err(Error(Error { input: "aabbbbbabbbbbbaabaaabaaa", code: Char }))
+Ordered: [RuleId(16), RuleId(1)]
+Either test: [RuleId(15), RuleId(1)] | [RuleId(14), RuleId(14)]
+Either test: [RuleId(1)] | [RuleId(14)]
+Either result: [RuleId(1)] | [RuleId(14)] ---
+  a => Err(Error(Error { input: "baabbbbbabbbbbbaabaaabaaa", code: Char }))
+  b => Ok(("aabbbbbabbbbbbaabaaabaaa", ()))
+Either result: [RuleId(15), RuleId(1)] | [RuleId(14), RuleId(14)] ---
+  a => Ok(("abbbbbabbbbbbaabaaabaaa", ()))
+  b => Err(Error(Error { input: "aabbbbbabbbbbbaabaaabaaa", code: Char }))
+  16 => Ok(("abbbbbabbbbbbaabaaabaaa", ()))
+  1 => Ok(("bbbbbabbbbbbaabaaabaaa", ()))
+Either result: [RuleId(23), RuleId(14)] | [RuleId(28), RuleId(1)] ---
+  a => Err(Error(Error { input: "aabbbbbabbbbbbaabaaabaaa", code: Char }))
+  b => Err(Error(Error { input: "bbbbbabbbbbbaabaaabaaa", code: Char }))
+Either result: [RuleId(9), RuleId(14)] | [RuleId(10), RuleId(1)] ---
+  a => Ok(("bbbabbbbbbaabaaabaaa", ()))
+  b => Err(Error(Error { input: "bbbbbabbbbbbaabaaabaaa", code: Char }))
+Either test: [RuleId(14), RuleId(17)] | [RuleId(1), RuleId(13)]
+Either test: [RuleId(14), RuleId(2)] | [RuleId(1), RuleId(7)]
+Either test: [RuleId(1), RuleId(24)] | [RuleId(14), RuleId(4)]
+Ordered: [RuleId(1), RuleId(1)]
+  1 => Ok(("bbbbbbaabaaabaaa", ()))
+  1 => Err(Error(Error { input: "bbbbbbaabaaabaaa", code: Char }))
+Either result: [RuleId(1), RuleId(24)] | [RuleId(14), RuleId(4)] ---
+  a => Err(Error(Error { input: "babbbbbbaabaaabaaa", code: Char }))
+  b => Err(Error(Error { input: "bbbbbbaabaaabaaa", code: Char }))
+Either result: [RuleId(14), RuleId(2)] | [RuleId(1), RuleId(7)] ---
+  a => Err(Error(Error { input: "bbbbbbaabaaabaaa", code: Char }))
+  b => Err(Error(Error { input: "bbabbbbbbaabaaabaaa", code: Char }))
+Either result: [RuleId(14), RuleId(17)] | [RuleId(1), RuleId(13)] ---
+  a => Err(Error(Error { input: "bbabbbbbbaabaaabaaa", code: Char }))
+  b => Err(Error(Error { input: "bbbabbbbbbaabaaabaaa", code: Char }))
+Either test: [RuleId(9), RuleId(14)] | [RuleId(10), RuleId(1)]
+Either test: [RuleId(14), RuleId(27)] | [RuleId(1), RuleId(26)]
+Either test: [RuleId(1), RuleId(6)] | [RuleId(14), RuleId(18)]
+Either test: [RuleId(14), RuleId(14)] | [RuleId(1), RuleId(14)]
+Either result: [RuleId(14), RuleId(14)] | [RuleId(1), RuleId(14)] ---
+  a => Err(Error(Error { input: "abbbbbabbbbbbaabaaabaaa", code: Char }))
+  b => Ok(("bbbbabbbbbbaabaaabaaa", ()))
+Either result: [RuleId(1), RuleId(6)] | [RuleId(14), RuleId(18)] ---
+  a => Ok(("bbbbabbbbbbaabaaabaaa", ()))
+  b => Err(Error(Error { input: "aabbbbbabbbbbbaabaaabaaa", code: Char }))
+Either result: [RuleId(14), RuleId(27)] | [RuleId(1), RuleId(26)] ---
+  a => Ok(("bbbbabbbbbbaabaaabaaa", ()))
+  b => Err(Error(Error { input: "baabbbbbabbbbbbaabaaabaaa", code: Char }))
+Either test: [RuleId(23), RuleId(14)] | [RuleId(28), RuleId(1)]
+Either test: [RuleId(25), RuleId(1)] | [RuleId(22), RuleId(14)]
+Either test: [RuleId(1), RuleId(1)] | [RuleId(1), RuleId(14)]
+Either result: [RuleId(1), RuleId(1)] | [RuleId(1), RuleId(14)] ---
+  a => Err(Error(Error { input: "baabbbbbabbbbbbaabaaabaaa", code: Char }))
+  b => Err(Error(Error { input: "baabbbbbabbbbbbaabaaabaaa", code: Char }))
+Ordered: [RuleId(14), RuleId(14)]
+  14 => Ok(("aabbbbbabbbbbbaabaaabaaa", ()))
+  14 => Err(Error(Error { input: "aabbbbbabbbbbbaabaaabaaa", code: Char }))
+Either result: [RuleId(25), RuleId(1)] | [RuleId(22), RuleId(14)] ---
+  a => Err(Error(Error { input: "baabbbbbabbbbbbaabaaabaaa", code: Char }))
+  b => Err(Error(Error { input: "aabbbbbabbbbbbaabaaabaaa", code: Char }))
+Ordered: [RuleId(16), RuleId(1)]
+Either test: [RuleId(15), RuleId(1)] | [RuleId(14), RuleId(14)]
+Either test: [RuleId(1)] | [RuleId(14)]
+Either result: [RuleId(1)] | [RuleId(14)] ---
+  a => Err(Error(Error { input: "baabbbbbabbbbbbaabaaabaaa", code: Char }))
+  b => Ok(("aabbbbbabbbbbbaabaaabaaa", ()))
+Either result: [RuleId(15), RuleId(1)] | [RuleId(14), RuleId(14)] ---
+  a => Ok(("abbbbbabbbbbbaabaaabaaa", ()))
+  b => Err(Error(Error { input: "aabbbbbabbbbbbaabaaabaaa", code: Char }))
+  16 => Ok(("abbbbbabbbbbbaabaaabaaa", ()))
+  1 => Ok(("bbbbbabbbbbbaabaaabaaa", ()))
+Either result: [RuleId(23), RuleId(14)] | [RuleId(28), RuleId(1)] ---
+  a => Err(Error(Error { input: "aabbbbbabbbbbbaabaaabaaa", code: Char }))
+  b => Err(Error(Error { input: "bbbbbabbbbbbaabaaabaaa", code: Char }))
+Either result: [RuleId(9), RuleId(14)] | [RuleId(10), RuleId(1)] ---
+  a => Ok(("bbbabbbbbbaabaaabaaa", ()))
+  b => Err(Error(Error { input: "bbbbbabbbbbbaabaaabaaa", code: Char }))
+Either test: [RuleId(42), RuleId(31)] | [RuleId(42), RuleId(11), RuleId(31)]
+Either test: [RuleId(9), RuleId(14)] | [RuleId(10), RuleId(1)]
+Either test: [RuleId(14), RuleId(27)] | [RuleId(1), RuleId(26)]
+Either test: [RuleId(1), RuleId(6)] | [RuleId(14), RuleId(18)]
+Ordered: [RuleId(15), RuleId(15)]
+Either test: [RuleId(1)] | [RuleId(14)]
+Either result: [RuleId(1)] | [RuleId(14)] ---
+  a => Err(Error(Error { input: "babbbbbbaabaaabaaa", code: Char }))
+  b => Ok(("abbbbbbaabaaabaaa", ()))
+  15 => Ok(("abbbbbbaabaaabaaa", ()))
+Either test: [RuleId(1)] | [RuleId(14)]
+Either result: [RuleId(1)] | [RuleId(14)] ---
+  a => Ok(("bbbbbbaabaaabaaa", ()))
+  b => Err(Error(Error { input: "abbbbbbaabaaabaaa", code: Char }))
+  15 => Ok(("bbbbbbaabaaabaaa", ()))
+Either result: [RuleId(1), RuleId(6)] | [RuleId(14), RuleId(18)] ---
+  a => Err(Error(Error { input: "bbabbbbbbaabaaabaaa", code: Char }))
+  b => Ok(("bbbbbbaabaaabaaa", ()))
+Either result: [RuleId(14), RuleId(27)] | [RuleId(1), RuleId(26)] ---
+  a => Ok(("bbbbbbaabaaabaaa", ()))
+  b => Err(Error(Error { input: "bbbabbbbbbaabaaabaaa", code: Char }))
+Either test: [RuleId(23), RuleId(14)] | [RuleId(28), RuleId(1)]
+Either test: [RuleId(25), RuleId(1)] | [RuleId(22), RuleId(14)]
+Either test: [RuleId(1), RuleId(1)] | [RuleId(1), RuleId(14)]
+Either result: [RuleId(1), RuleId(1)] | [RuleId(1), RuleId(14)] ---
+  a => Err(Error(Error { input: "bbbabbbbbbaabaaabaaa", code: Char }))
+  b => Err(Error(Error { input: "bbbabbbbbbaabaaabaaa", code: Char }))
+Ordered: [RuleId(14), RuleId(14)]
+  14 => Ok(("bbabbbbbbaabaaabaaa", ()))
+  14 => Ok(("babbbbbbaabaaabaaa", ()))
+Either result: [RuleId(25), RuleId(1)] | [RuleId(22), RuleId(14)] ---
+  a => Err(Error(Error { input: "bbbabbbbbbaabaaabaaa", code: Char }))
+  b => Ok(("abbbbbbaabaaabaaa", ()))
+Ordered: [RuleId(16), RuleId(1)]
+Either test: [RuleId(15), RuleId(1)] | [RuleId(14), RuleId(14)]
+Either test: [RuleId(1)] | [RuleId(14)]
+Either result: [RuleId(1)] | [RuleId(14)] ---
+  a => Err(Error(Error { input: "bbbabbbbbbaabaaabaaa", code: Char }))
+  b => Ok(("bbabbbbbbaabaaabaaa", ()))
+Either result: [RuleId(15), RuleId(1)] | [RuleId(14), RuleId(14)] ---
+  a => Err(Error(Error { input: "bbabbbbbbaabaaabaaa", code: Char }))
+  b => Ok(("babbbbbbaabaaabaaa", ()))
+  16 => Ok(("babbbbbbaabaaabaaa", ()))
+  1 => Err(Error(Error { input: "babbbbbbaabaaabaaa", code: Char }))
+Either result: [RuleId(23), RuleId(14)] | [RuleId(28), RuleId(1)] ---
+  a => Err(Error(Error { input: "abbbbbbaabaaabaaa", code: Char }))
+  b => Err(Error(Error { input: "babbbbbbaabaaabaaa", code: Char }))
+Either result: [RuleId(9), RuleId(14)] | [RuleId(10), RuleId(1)] ---
+  a => Ok(("bbbbbaabaaabaaa", ()))
+  b => Err(Error(Error { input: "babbbbbbaabaaabaaa", code: Char }))
+Either test: [RuleId(14), RuleId(17)] | [RuleId(1), RuleId(13)]
+Either test: [RuleId(14), RuleId(2)] | [RuleId(1), RuleId(7)]
+Either test: [RuleId(1), RuleId(24)] | [RuleId(14), RuleId(4)]
+Ordered: [RuleId(1), RuleId(1)]
+  1 => Err(Error(Error { input: "bbaabaaabaaa", code: Char }))
+Either result: [RuleId(1), RuleId(24)] | [RuleId(14), RuleId(4)] ---
+  a => Err(Error(Error { input: "bbbaabaaabaaa", code: Char }))
+  b => Err(Error(Error { input: "bbaabaaabaaa", code: Char }))
+Either result: [RuleId(14), RuleId(2)] | [RuleId(1), RuleId(7)] ---
+  a => Err(Error(Error { input: "bbaabaaabaaa", code: Char }))
+  b => Err(Error(Error { input: "bbbbaabaaabaaa", code: Char }))
+Either result: [RuleId(14), RuleId(17)] | [RuleId(1), RuleId(13)] ---
+  a => Err(Error(Error { input: "bbbbaabaaabaaa", code: Char }))
+  b => Err(Error(Error { input: "bbbbbaabaaabaaa", code: Char }))
+Either test: [RuleId(9), RuleId(14)] | [RuleId(10), RuleId(1)]
+Either test: [RuleId(14), RuleId(27)] | [RuleId(1), RuleId(26)]
+Either test: [RuleId(1), RuleId(6)] | [RuleId(14), RuleId(18)]
+Ordered: [RuleId(15), RuleId(15)]
+Either test: [RuleId(1)] | [RuleId(14)]
+Either result: [RuleId(1)] | [RuleId(14)] ---
+  a => Err(Error(Error { input: "babbbbbbaabaaabaaa", code: Char }))
+  b => Ok(("abbbbbbaabaaabaaa", ()))
+  15 => Ok(("abbbbbbaabaaabaaa", ()))
+Either test: [RuleId(1)] | [RuleId(14)]
+Either result: [RuleId(1)] | [RuleId(14)] ---
+  a => Ok(("bbbbbbaabaaabaaa", ()))
+  b => Err(Error(Error { input: "abbbbbbaabaaabaaa", code: Char }))
+  15 => Ok(("bbbbbbaabaaabaaa", ()))
+Either result: [RuleId(1), RuleId(6)] | [RuleId(14), RuleId(18)] ---
+  a => Err(Error(Error { input: "bbabbbbbbaabaaabaaa", code: Char }))
+  b => Ok(("bbbbbbaabaaabaaa", ()))
+Either result: [RuleId(14), RuleId(27)] | [RuleId(1), RuleId(26)] ---
+  a => Ok(("bbbbbbaabaaabaaa", ()))
+  b => Err(Error(Error { input: "bbbabbbbbbaabaaabaaa", code: Char }))
+Either test: [RuleId(23), RuleId(14)] | [RuleId(28), RuleId(1)]
+Either test: [RuleId(25), RuleId(1)] | [RuleId(22), RuleId(14)]
+Either test: [RuleId(1), RuleId(1)] | [RuleId(1), RuleId(14)]
+Either result: [RuleId(1), RuleId(1)] | [RuleId(1), RuleId(14)] ---
+  a => Err(Error(Error { input: "bbbabbbbbbaabaaabaaa", code: Char }))
+  b => Err(Error(Error { input: "bbbabbbbbbaabaaabaaa", code: Char }))
+Ordered: [RuleId(14), RuleId(14)]
+  14 => Ok(("bbabbbbbbaabaaabaaa", ()))
+  14 => Ok(("babbbbbbaabaaabaaa", ()))
+Either result: [RuleId(25), RuleId(1)] | [RuleId(22), RuleId(14)] ---
+  a => Err(Error(Error { input: "bbbabbbbbbaabaaabaaa", code: Char }))
+  b => Ok(("abbbbbbaabaaabaaa", ()))
+Ordered: [RuleId(16), RuleId(1)]
+Either test: [RuleId(15), RuleId(1)] | [RuleId(14), RuleId(14)]
+Either test: [RuleId(1)] | [RuleId(14)]
+Either result: [RuleId(1)] | [RuleId(14)] ---
+  a => Err(Error(Error { input: "bbbabbbbbbaabaaabaaa", code: Char }))
+  b => Ok(("bbabbbbbbaabaaabaaa", ()))
+Either result: [RuleId(15), RuleId(1)] | [RuleId(14), RuleId(14)] ---
+  a => Err(Error(Error { input: "bbabbbbbbaabaaabaaa", code: Char }))
+  b => Ok(("babbbbbbaabaaabaaa", ()))
+  16 => Ok(("babbbbbbaabaaabaaa", ()))
+  1 => Err(Error(Error { input: "babbbbbbaabaaabaaa", code: Char }))
+Either result: [RuleId(23), RuleId(14)] | [RuleId(28), RuleId(1)] ---
+  a => Err(Error(Error { input: "abbbbbbaabaaabaaa", code: Char }))
+  b => Err(Error(Error { input: "babbbbbbaabaaabaaa", code: Char }))
+Either result: [RuleId(9), RuleId(14)] | [RuleId(10), RuleId(1)] ---
+  a => Ok(("bbbbbaabaaabaaa", ()))
+  b => Err(Error(Error { input: "babbbbbbaabaaabaaa", code: Char }))
+Either test: [RuleId(42), RuleId(31)] | [RuleId(42), RuleId(11), RuleId(31)]
+Either test: [RuleId(9), RuleId(14)] | [RuleId(10), RuleId(1)]
+Either test: [RuleId(14), RuleId(27)] | [RuleId(1), RuleId(26)]
+Either test: [RuleId(1), RuleId(6)] | [RuleId(14), RuleId(18)]
+Ordered: [RuleId(15), RuleId(15)]
+Either test: [RuleId(1)] | [RuleId(14)]
+Either result: [RuleId(1)] | [RuleId(14)] ---
+  a => Err(Error(Error { input: "bbbaabaaabaaa", code: Char }))
+  b => Ok(("bbaabaaabaaa", ()))
+  15 => Ok(("bbaabaaabaaa", ()))
+Either test: [RuleId(1)] | [RuleId(14)]
+Either result: [RuleId(1)] | [RuleId(14)] ---
+  a => Err(Error(Error { input: "bbaabaaabaaa", code: Char }))
+  b => Ok(("baabaaabaaa", ()))
+  15 => Ok(("baabaaabaaa", ()))
+Either result: [RuleId(1), RuleId(6)] | [RuleId(14), RuleId(18)] ---
+  a => Err(Error(Error { input: "bbbbaabaaabaaa", code: Char }))
+  b => Ok(("baabaaabaaa", ()))
+Either result: [RuleId(14), RuleId(27)] | [RuleId(1), RuleId(26)] ---
+  a => Ok(("baabaaabaaa", ()))
+  b => Err(Error(Error { input: "bbbbbaabaaabaaa", code: Char }))
+Either test: [RuleId(23), RuleId(14)] | [RuleId(28), RuleId(1)]
+Either test: [RuleId(25), RuleId(1)] | [RuleId(22), RuleId(14)]
+Either test: [RuleId(1), RuleId(1)] | [RuleId(1), RuleId(14)]
+Either result: [RuleId(1), RuleId(1)] | [RuleId(1), RuleId(14)] ---
+  a => Err(Error(Error { input: "bbbbbaabaaabaaa", code: Char }))
+  b => Err(Error(Error { input: "bbbbbaabaaabaaa", code: Char }))
+Ordered: [RuleId(14), RuleId(14)]
+  14 => Ok(("bbbbaabaaabaaa", ()))
+  14 => Ok(("bbbaabaaabaaa", ()))
+Either result: [RuleId(25), RuleId(1)] | [RuleId(22), RuleId(14)] ---
+  a => Err(Error(Error { input: "bbbbbaabaaabaaa", code: Char }))
+  b => Ok(("bbaabaaabaaa", ()))
+Ordered: [RuleId(16), RuleId(1)]
+Either test: [RuleId(15), RuleId(1)] | [RuleId(14), RuleId(14)]
+Either test: [RuleId(1)] | [RuleId(14)]
+Either result: [RuleId(1)] | [RuleId(14)] ---
+  a => Err(Error(Error { input: "bbbbbaabaaabaaa", code: Char }))
+  b => Ok(("bbbbaabaaabaaa", ()))
+Either result: [RuleId(15), RuleId(1)] | [RuleId(14), RuleId(14)] ---
+  a => Err(Error(Error { input: "bbbbaabaaabaaa", code: Char }))
+  b => Ok(("bbbaabaaabaaa", ()))
+  16 => Ok(("bbbaabaaabaaa", ()))
+  1 => Err(Error(Error { input: "bbbaabaaabaaa", code: Char }))
+Either result: [RuleId(23), RuleId(14)] | [RuleId(28), RuleId(1)] ---
+  a => Ok(("baabaaabaaa", ()))
+  b => Err(Error(Error { input: "bbbaabaaabaaa", code: Char }))
+Either result: [RuleId(9), RuleId(14)] | [RuleId(10), RuleId(1)] ---
+  a => Ok(("aabaaabaaa", ()))
+  b => Err(Error(Error { input: "baabaaabaaa", code: Char }))
+Either test: [RuleId(14), RuleId(17)] | [RuleId(1), RuleId(13)]
+Either test: [RuleId(14), RuleId(3)] | [RuleId(1), RuleId(12)]
+Either test: [RuleId(24), RuleId(14)] | [RuleId(19), RuleId(1)]
+Ordered: [RuleId(14), RuleId(1)]
+  14 => Ok(("aaabaaa", ()))
+  1 => Ok(("aabaaa", ()))
+Either test: [RuleId(14), RuleId(1)] | [RuleId(14), RuleId(14)]
+Either result: [RuleId(14), RuleId(1)] | [RuleId(14), RuleId(14)] ---
+  a => Ok(("aabaaa", ()))
+  b => Err(Error(Error { input: "aaabaaa", code: Char }))
+Either result: [RuleId(24), RuleId(14)] | [RuleId(19), RuleId(1)] ---
+  a => Err(Error(Error { input: "aabaaa", code: Char }))
+  b => Ok(("abaaa", ()))
+Either result: [RuleId(14), RuleId(3)] | [RuleId(1), RuleId(12)] ---
+  a => Err(Error(Error { input: "abaaabaaa", code: Char }))
+  b => Ok(("abaaa", ()))
+Either result: [RuleId(14), RuleId(17)] | [RuleId(1), RuleId(13)] ---
+  a => Err(Error(Error { input: "aabaaabaaa", code: Char }))
+  b => Ok(("abaaa", ()))
+Either test: [RuleId(9), RuleId(14)] | [RuleId(10), RuleId(1)]
+Either test: [RuleId(14), RuleId(27)] | [RuleId(1), RuleId(26)]
+Either test: [RuleId(1), RuleId(6)] | [RuleId(14), RuleId(18)]
+Ordered: [RuleId(15), RuleId(15)]
+Either test: [RuleId(1)] | [RuleId(14)]
+Either result: [RuleId(1)] | [RuleId(14)] ---
+  a => Err(Error(Error { input: "bbbaabaaabaaa", code: Char }))
+  b => Ok(("bbaabaaabaaa", ()))
+  15 => Ok(("bbaabaaabaaa", ()))
+Either test: [RuleId(1)] | [RuleId(14)]
+Either result: [RuleId(1)] | [RuleId(14)] ---
+  a => Err(Error(Error { input: "bbaabaaabaaa", code: Char }))
+  b => Ok(("baabaaabaaa", ()))
+  15 => Ok(("baabaaabaaa", ()))
+Either result: [RuleId(1), RuleId(6)] | [RuleId(14), RuleId(18)] ---
+  a => Err(Error(Error { input: "bbbbaabaaabaaa", code: Char }))
+  b => Ok(("baabaaabaaa", ()))
+Either result: [RuleId(14), RuleId(27)] | [RuleId(1), RuleId(26)] ---
+  a => Ok(("baabaaabaaa", ()))
+  b => Err(Error(Error { input: "bbbbbaabaaabaaa", code: Char }))
+Either test: [RuleId(23), RuleId(14)] | [RuleId(28), RuleId(1)]
+Either test: [RuleId(25), RuleId(1)] | [RuleId(22), RuleId(14)]
+Either test: [RuleId(1), RuleId(1)] | [RuleId(1), RuleId(14)]
+Either result: [RuleId(1), RuleId(1)] | [RuleId(1), RuleId(14)] ---
+  a => Err(Error(Error { input: "bbbbbaabaaabaaa", code: Char }))
+  b => Err(Error(Error { input: "bbbbbaabaaabaaa", code: Char }))
+Ordered: [RuleId(14), RuleId(14)]
+  14 => Ok(("bbbbaabaaabaaa", ()))
+  14 => Ok(("bbbaabaaabaaa", ()))
+Either result: [RuleId(25), RuleId(1)] | [RuleId(22), RuleId(14)] ---
+  a => Err(Error(Error { input: "bbbbbaabaaabaaa", code: Char }))
+  b => Ok(("bbaabaaabaaa", ()))
+Ordered: [RuleId(16), RuleId(1)]
+Either test: [RuleId(15), RuleId(1)] | [RuleId(14), RuleId(14)]
+Either test: [RuleId(1)] | [RuleId(14)]
+Either result: [RuleId(1)] | [RuleId(14)] ---
+  a => Err(Error(Error { input: "bbbbbaabaaabaaa", code: Char }))
+  b => Ok(("bbbbaabaaabaaa", ()))
+Either result: [RuleId(15), RuleId(1)] | [RuleId(14), RuleId(14)] ---
+  a => Err(Error(Error { input: "bbbbaabaaabaaa", code: Char }))
+  b => Ok(("bbbaabaaabaaa", ()))
+  16 => Ok(("bbbaabaaabaaa", ()))
+  1 => Err(Error(Error { input: "bbbaabaaabaaa", code: Char }))
+Either result: [RuleId(23), RuleId(14)] | [RuleId(28), RuleId(1)] ---
+  a => Ok(("baabaaabaaa", ()))
+  b => Err(Error(Error { input: "bbbaabaaabaaa", code: Char }))
+Either result: [RuleId(9), RuleId(14)] | [RuleId(10), RuleId(1)] ---
+  a => Ok(("aabaaabaaa", ()))
+  b => Err(Error(Error { input: "baabaaabaaa", code: Char }))
+Either test: [RuleId(42), RuleId(31)] | [RuleId(42), RuleId(11), RuleId(31)]
+Either test: [RuleId(9), RuleId(14)] | [RuleId(10), RuleId(1)]
+Either test: [RuleId(14), RuleId(27)] | [RuleId(1), RuleId(26)]
+Either test: [RuleId(14), RuleId(22)] | [RuleId(1), RuleId(20)]
+Either test: [RuleId(14), RuleId(14)] | [RuleId(1), RuleId(15)]
+Either result: [RuleId(14), RuleId(14)] | [RuleId(1), RuleId(15)] ---
+  a => Err(Error(Error { input: "aaabaaa", code: Char }))
+  b => Err(Error(Error { input: "baaabaaa", code: Char }))
+Either result: [RuleId(14), RuleId(22)] | [RuleId(1), RuleId(20)] ---
+  a => Err(Error(Error { input: "abaaabaaa", code: Char }))
+  b => Err(Error(Error { input: "baaabaaa", code: Char }))
+Either result: [RuleId(14), RuleId(27)] | [RuleId(1), RuleId(26)] ---
+  a => Err(Error(Error { input: "aabaaabaaa", code: Char }))
+  b => Err(Error(Error { input: "baaabaaa", code: Char }))
+Either test: [RuleId(23), RuleId(14)] | [RuleId(28), RuleId(1)]
+Either test: [RuleId(25), RuleId(1)] | [RuleId(22), RuleId(14)]
+Either test: [RuleId(1), RuleId(1)] | [RuleId(1), RuleId(14)]
+Either result: [RuleId(1), RuleId(1)] | [RuleId(1), RuleId(14)] ---
+  a => Ok(("baaabaaa", ()))
+  b => Err(Error(Error { input: "abaaabaaa", code: Char }))
+Ordered: [RuleId(14), RuleId(14)]
+  14 => Err(Error(Error { input: "aabaaabaaa", code: Char }))
+Either result: [RuleId(25), RuleId(1)] | [RuleId(22), RuleId(14)] ---
+  a => Err(Error(Error { input: "baaabaaa", code: Char }))
+  b => Err(Error(Error { input: "aabaaabaaa", code: Char }))
+Ordered: [RuleId(16), RuleId(1)]
+Either test: [RuleId(15), RuleId(1)] | [RuleId(14), RuleId(14)]
+Either test: [RuleId(1)] | [RuleId(14)]
+Either result: [RuleId(1)] | [RuleId(14)] ---
+  a => Ok(("abaaabaaa", ()))
+  b => Err(Error(Error { input: "aabaaabaaa", code: Char }))
+Either result: [RuleId(15), RuleId(1)] | [RuleId(14), RuleId(14)] ---
+  a => Ok(("baaabaaa", ()))
+  b => Err(Error(Error { input: "aabaaabaaa", code: Char }))
+  16 => Ok(("baaabaaa", ()))
+  1 => Err(Error(Error { input: "baaabaaa", code: Char }))
+Either result: [RuleId(23), RuleId(14)] | [RuleId(28), RuleId(1)] ---
+  a => Err(Error(Error { input: "aabaaabaaa", code: Char }))
+  b => Err(Error(Error { input: "baaabaaa", code: Char }))
+Either result: [RuleId(9), RuleId(14)] | [RuleId(10), RuleId(1)] ---
+  a => Err(Error(Error { input: "baaabaaa", code: Char }))
+  b => Err(Error(Error { input: "baaabaaa", code: Char }))
+Either test: [RuleId(9), RuleId(14)] | [RuleId(10), RuleId(1)]
+Either test: [RuleId(14), RuleId(27)] | [RuleId(1), RuleId(26)]
+Either test: [RuleId(14), RuleId(22)] | [RuleId(1), RuleId(20)]
+Either test: [RuleId(14), RuleId(14)] | [RuleId(1), RuleId(15)]
+Either result: [RuleId(14), RuleId(14)] | [RuleId(1), RuleId(15)] ---
+  a => Err(Error(Error { input: "aaabaaa", code: Char }))
+  b => Err(Error(Error { input: "baaabaaa", code: Char }))
+Either result: [RuleId(14), RuleId(22)] | [RuleId(1), RuleId(20)] ---
+  a => Err(Error(Error { input: "abaaabaaa", code: Char }))
+  b => Err(Error(Error { input: "baaabaaa", code: Char }))
+Either result: [RuleId(14), RuleId(27)] | [RuleId(1), RuleId(26)] ---
+  a => Err(Error(Error { input: "aabaaabaaa", code: Char }))
+  b => Err(Error(Error { input: "baaabaaa", code: Char }))
+Either test: [RuleId(23), RuleId(14)] | [RuleId(28), RuleId(1)]
+Either test: [RuleId(25), RuleId(1)] | [RuleId(22), RuleId(14)]
+Either test: [RuleId(1), RuleId(1)] | [RuleId(1), RuleId(14)]
+Either result: [RuleId(1), RuleId(1)] | [RuleId(1), RuleId(14)] ---
+  a => Ok(("baaabaaa", ()))
+  b => Err(Error(Error { input: "abaaabaaa", code: Char }))
+Ordered: [RuleId(14), RuleId(14)]
+  14 => Err(Error(Error { input: "aabaaabaaa", code: Char }))
+Either result: [RuleId(25), RuleId(1)] | [RuleId(22), RuleId(14)] ---
+  a => Err(Error(Error { input: "baaabaaa", code: Char }))
+  b => Err(Error(Error { input: "aabaaabaaa", code: Char }))
+Ordered: [RuleId(16), RuleId(1)]
+Either test: [RuleId(15), RuleId(1)] | [RuleId(14), RuleId(14)]
+Either test: [RuleId(1)] | [RuleId(14)]
+Either result: [RuleId(1)] | [RuleId(14)] ---
+  a => Ok(("abaaabaaa", ()))
+  b => Err(Error(Error { input: "aabaaabaaa", code: Char }))
+Either result: [RuleId(15), RuleId(1)] | [RuleId(14), RuleId(14)] ---
+  a => Ok(("baaabaaa", ()))
+  b => Err(Error(Error { input: "aabaaabaaa", code: Char }))
+  16 => Ok(("baaabaaa", ()))
+  1 => Err(Error(Error { input: "baaabaaa", code: Char }))
+Either result: [RuleId(23), RuleId(14)] | [RuleId(28), RuleId(1)] ---
+  a => Err(Error(Error { input: "aabaaabaaa", code: Char }))
+  b => Err(Error(Error { input: "baaabaaa", code: Char }))
+Either result: [RuleId(9), RuleId(14)] | [RuleId(10), RuleId(1)] ---
+  a => Err(Error(Error { input: "baaabaaa", code: Char }))
+  b => Err(Error(Error { input: "baaabaaa", code: Char }))
+Either result: [RuleId(42), RuleId(31)] | [RuleId(42), RuleId(11), RuleId(31)] ---
+  a => Err(Error(Error { input: "baaabaaa", code: Char }))
+  b => Err(Error(Error { input: "baaabaaa", code: Char }))
+Either result: [RuleId(42), RuleId(31)] | [RuleId(42), RuleId(11), RuleId(31)] ---
+  a => Ok(("abaaa", ()))
+  b => Err(Error(Error { input: "baaabaaa", code: Char }))
+Either test: [RuleId(14), RuleId(17)] | [RuleId(1), RuleId(13)]
+Either test: [RuleId(14), RuleId(3)] | [RuleId(1), RuleId(12)]
+Either test: [RuleId(5), RuleId(14)] | [RuleId(16), RuleId(1)]
+Either test: [RuleId(1), RuleId(14)] | [RuleId(15), RuleId(1)]
+Either test: [RuleId(1)] | [RuleId(14)]
+Either result: [RuleId(1)] | [RuleId(14)] ---
+  a => Ok(("aa", ()))
+  b => Err(Error(Error { input: "aaa", code: Char }))
+Either result: [RuleId(1), RuleId(14)] | [RuleId(15), RuleId(1)] ---
+  a => Err(Error(Error { input: "aa", code: Char }))
+  b => Ok(("a", ()))
+Either test: [RuleId(15), RuleId(1)] | [RuleId(14), RuleId(14)]
+Either test: [RuleId(1)] | [RuleId(14)]
+Either result: [RuleId(1)] | [RuleId(14)] ---
+  a => Ok(("aa", ()))
+  b => Err(Error(Error { input: "aaa", code: Char }))
+Either result: [RuleId(15), RuleId(1)] | [RuleId(14), RuleId(14)] ---
+  a => Ok(("a", ()))
+  b => Err(Error(Error { input: "aaa", code: Char }))
+Either result: [RuleId(5), RuleId(14)] | [RuleId(16), RuleId(1)] ---
+  a => Err(Error(Error { input: "a", code: Char }))
+  b => Ok(("", ()))
+Either result: [RuleId(14), RuleId(3)] | [RuleId(1), RuleId(12)] ---
+  a => Ok(("", ()))
+  b => Err(Error(Error { input: "baaa", code: Char }))
+Either result: [RuleId(14), RuleId(17)] | [RuleId(1), RuleId(13)] ---
+  a => Err(Error(Error { input: "abaaa", code: Char }))
+  b => Ok(("", ()))
+Either result: [RuleId(42), RuleId(31)] | [RuleId(42), RuleId(11), RuleId(31)] ---
+  a => Err(Error(Error { input: "bbbbbaabaaabaaa", code: Char }))
+  b => Ok(("", ()))
+Either test: [RuleId(14), RuleId(17)] | [RuleId(1), RuleId(13)]
+Either result: [RuleId(14), RuleId(17)] | [RuleId(1), RuleId(13)] ---
+  a => Err(Error(Error { input: "", code: Char }))
+  b => Err(Error(Error { input: "", code: Char }))
+Either result: [RuleId(42), RuleId(31)] | [RuleId(42), RuleId(11), RuleId(31)] ---
+  a => Err(Error(Error { input: "bbbabbbbbbaabaaabaaa", code: Char }))
+  b => Err(Error(Error { input: "", code: Char }))
+  11 => Err(Error(Error { input: "", code: Char }))
+babbbbaabbbbbabbbbbbaabaaabaaa => false
+Matching inputs: 0
