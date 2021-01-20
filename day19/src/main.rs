@@ -1,10 +1,10 @@
-use std::collections::HashMap;
+use std::{collections::HashMap};
 
 use anyhow::{anyhow, Result};
 use nom::{
     branch::alt,
     bytes::complete::tag,
-    character::complete::{alpha1, anychar, one_of, space0, space1},
+    character::complete::{anychar, one_of, space1},
     combinator::{map_res, recognize},
     multi::{many1, separated_list1},
     sequence::{delimited, tuple},
@@ -125,10 +125,6 @@ impl RuleSet {
                     )))
                 }
             }
-            _ => Err(nom::Err::Failure(nom::error::Error::new(
-                i,
-                nom::error::ErrorKind::TooLarge,
-            ))),
         }
     }
 
@@ -182,11 +178,39 @@ fn main() -> Result<()> {
     part1(&example_rules, &example_input)?;
 
     // part 1 actual
-    let rules_string = std::fs::read_to_string("day19/rules.txt")?;
-    let lines_string = std::fs::read_to_string("day19/lines.txt")?;
-    let rules: Vec<&str> = rules_string.lines().collect();
-    let lines: Vec<&str> = lines_string.lines().collect();
-    part1(&rules, &lines)?;
+    println!("Part 1 ------------------------------------------------");
+    {
+        let rules_string = std::fs::read_to_string("day19/rules-part1.txt")?;
+        let lines_string = std::fs::read_to_string("day19/lines.txt")?;
+        let rules: Vec<&str> = rules_string.lines().collect();
+        let lines: Vec<&str> = lines_string.lines().collect();
+        part1(&rules, &lines)?;
+    }
+
+    // part 2 actual
+    println!("Part 2 ------------------------------------------------");
+    {
+        let rules_string = std::fs::read_to_string("day19/rules-part2.txt")?;
+        let lines_string = std::fs::read_to_string("day19/lines.txt")?;
+        let rules: Vec<&str> = rules_string.lines().collect();
+        let lines: Vec<&str> = lines_string.lines().collect();
+        part1(&rules, &lines)?;
+        // 141 is the WRONG answer
+    }
+
+    fn part2_test(rules_path: &str, lines_path: &str) -> Result<()> {
+        let rules_string = std::fs::read_to_string(rules_path)?;
+        let lines_string = std::fs::read_to_string(lines_path)?;
+        let rules: Vec<&str> = rules_string.lines().collect();
+        let lines: Vec<&str> = lines_string.lines().collect();
+        part1(&rules, &lines)?;
+        Ok(())
+    }
+
+    println!("Part 2 test A -------------");
+    part2_test("day19/example-rules-part2-a.txt", "day19/example-input-part2.txt")?;
+    println!("Part 2 test B -------------");
+    part2_test("day19/example-rules-part2-b.txt", "day19/example-input-part2.txt")?;
 
     Ok(())
 }
