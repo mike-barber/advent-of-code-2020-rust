@@ -9,7 +9,7 @@ struct RuleId(usize);
 #[derive(Debug, Clone, PartialEq, Eq)]
 enum Rule {
     Literal(char),
-    Either(Vec<RuleId>, Vec<RuleId>),
+    Either((Vec<RuleId>, Vec<RuleId>)),
     Ordered(Vec<RuleId>),
 }
 
@@ -48,7 +48,7 @@ fn either(i: &str) -> IResult<&str, Rule> {
     map_res(
         tuple((ordered, tag(" | "), ordered)),
         |(aa, _, bb)| match (aa, bb) {
-            (Rule::Ordered(a), Rule::Ordered(b)) => Ok(Rule::Either(a, b)),
+            (Rule::Ordered(a), Rule::Ordered(b)) => Ok(Rule::Either((a, b))),
             _ => Err(anyhow!("missing Rule::Ordered on either")),
         },
     )(i)
@@ -68,6 +68,7 @@ fn rule(i: &str) -> IResult<&str, (RuleId, Rule)> {
 #[derive(Debug)]
 struct RuleSet(HashMap<RuleId, Rule>);
 impl RuleSet {
+
     fn parse<'a,I>(lines: I) -> Result<Self> where I:Iterator<Item=&'a &'a str> 
     {
         let mut rules = HashMap::new();
@@ -79,23 +80,63 @@ impl RuleSet {
         Ok(RuleSet(rules))
     }
 
-    fn evaluate_rule<'a>(i: &'a str, rule: &Rule) -> IResult<&'a str, ()> {
+    fn evaluate_ordered<'a>(&self, i:&'a str, ids: &[RuleId]) -> IResult<&'a str, ()> {
+        let mut remaining:&str = i;
+        for id in ids {
+            let rule = self.0.get(id).unwrap();
+            let res = self.evaluate_rule(remaining, rule)?;
+            remaining = res.0
+        };
+        Ok((remaining, ()))
+    }
+
+    fn evaluate_rule<'a>(&self, i: &'a str, rule: &Rule) -> IResult<&'a str, ()> {
         use nom::character::complete::char;
         fn result_ok() -> Result<()> {
             Ok(())
         }
-        fn result_fail() -> Result<()> {
-            Err(anyhow!("failed to parse"))
-        }
         match rule {
             Rule::Literal(c) => map_res(char(*c), |_| result_ok())(i),
-            _ => result_fail()
+            Rule::Ordered(ids) => {
+                let mut remaining:&str = i;
+                for id in ids {
+                    let rule = self.0.get(id).unwrap();
+                    let res = self.evaluate_rule(remaining, rule)?;
+                    remaining = res.0
+                };
+                Ok((remaining, ()))                
+            }
+            Rule::Either((a,b)) => {
+                if let Ok(res_a) = self.evaluate_ordered(i, a) {
+                    Ok(res_a)
+                } else if let Ok(res_b) = self.evaluate_ordered(i, b) {
+                    Ok(res_b)
+                } else {
+                    Err(nom::Err::Failure(nom::error::Error::new(i, nom::error::ErrorKind::TooLarge)))
+                }
+            }
+            _ => Err(nom::Err::Failure(nom::error::Error::new(i, nom::error::ErrorKind::TooLarge)))
         }
     }
+
+    // find if there's at least one rulechain the succeeds -- i.e. the input is valid.
+    fn matches(&self, i:&str) -> bool {
+        for r in self.0.values() {
+            if let Ok(res) = self.evaluate_rule(i, r) {
+                if res.0.len() == 0 {
+                    // complete
+                    return true
+                }
+            }
+        }
+        false
+    }
+
+
 }
 
 
-fn main() {
+fn main() -> Result<()> {
     let example_rules = [
         r#"0: 4 1 5"#,
         r#"1: 2 3 | 3 2"#,
@@ -112,12 +153,26 @@ fn main() {
         r#"aaaabbb"#,
     ];
 
-    let rule_set = RuleSet::parse(example_rules.iter());
-    println!("{:?}", rule_set);
+    let rules = RuleSet::parse(example_rules.iter());
+    println!("{:?}", &rules);
+
+    let rules = rules?;
+    let mut count = 0;
+    for i in example_input.iter() {
+        let res = rules.matches(i);
+        if res {
+            count += 1;
+        }
+        println!("{} => {}", i, res);
+    }
+    println!("Matching inputs: {}", count);
+    
+
     // for l in example_rules.iter() {
     //     let rule = rule(l);
     //     println!("{} => {:?}", l, rule);
     // }
+    Ok(())
 }
 
 #[cfg(test)]
