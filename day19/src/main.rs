@@ -1,4 +1,4 @@
-use std::{collections::HashMap};
+use std::collections::HashMap;
 
 use anyhow::{anyhow, Result};
 use nom::{
@@ -28,7 +28,7 @@ fn rule_number(i: &str) -> IResult<&str, RuleId> {
     //     |s: &str| s.parse().map(|n| RuleId(n)),
     // )(i)
     map_res(recognize(many1(one_of("1234567890"))), |s: &str| {
-        s.parse().map(|n| RuleId(n))
+        s.parse().map(RuleId)
     })(i)
 }
 
@@ -191,7 +191,7 @@ impl RuleSet {
 fn test_rules(rules: &RuleSet, start_rule: RuleId, lines: &[&str]) -> Result<()> {
     let rule = rules
         .rule(&start_rule)
-        .ok_or(anyhow!("missing rule {:?}", start_rule))?;
+        .ok_or_else(|| anyhow!("missing rule {:?}", start_rule))?;
     let mut count = 0;
     for i in lines.iter() {
         let res = rules.evaluate_rule_complete(i, &rule).is_some();
@@ -204,7 +204,7 @@ fn test_rules(rules: &RuleSet, start_rule: RuleId, lines: &[&str]) -> Result<()>
     Ok(())
 }
 
-// debugging code 
+// debugging code
 #[allow(dead_code)]
 fn debug_test() -> Result<()> {
     let rules = RuleSet::parse_from_file("day19/example-rules-part2-b.txt")?;
@@ -219,7 +219,7 @@ fn debug_test() -> Result<()> {
     for l in std::fs::read_to_string("day19/example-input-part2.txt")?.lines() {
         let res = rules.evaluate_rule_str(l, &rule);
         println!("{} => {:?}", l, res);
-        if let Some((rem, found)) = res.iter().find(|(rem, _)| rem.len() == 0) {
+        if let Some((rem, found)) = res.iter().find(|(rem, _)| rem.is_empty()) {
             println!("+ FOUND rem {} found {}", rem, found);
             assert_eq!(found, l);
             count += 1;
@@ -262,16 +262,16 @@ fn main() -> Result<()> {
         let rules = RuleSet::parse_from_file("day19/rules-part1.txt")?;
         test_rules(&rules, RuleId(0), &lines)?;
         // correct is 113
-    }   
+    }
 
     // part 2 actual
     println!("Part 2 ------------------------------------------------");
     {
         let rules = RuleSet::parse_from_file("day19/rules-part2.txt")?;
-        test_rules(&rules, RuleId(0), &lines)?; 
+        test_rules(&rules, RuleId(0), &lines)?;
         // correct is 253
     }
-   
+
     Ok(())
 }
 
