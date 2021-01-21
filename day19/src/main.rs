@@ -1,7 +1,15 @@
 use std::{collections::HashMap, path::Path};
 
 use anyhow::{anyhow, Result};
-use nom::{IResult, branch::alt, bytes::complete::tag, character::complete::{alpha1, anychar, one_of, space1}, combinator::{map_res, recognize}, multi::{many1, separated_list1}, sequence::{delimited, tuple}};
+use nom::{
+    branch::alt,
+    bytes::complete::tag,
+    character::complete::{alpha1, anychar, one_of, space1},
+    combinator::{map_res, recognize},
+    multi::{many1, separated_list1},
+    sequence::{delimited, tuple},
+    IResult,
+};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 struct RuleId(usize);
@@ -119,10 +127,10 @@ impl RuleSet {
                 Ok((remaining, ()))
             }
             Rule::Either((a, b)) => {
-                println!("Either test: {:?} | {:?}", a,b);
+                println!("Either test: {:?} | {:?}", a, b);
                 let result_a = self.evaluate_ordered(i, a);
                 let result_b = self.evaluate_ordered(i, b);
-                println!("Either result: {:?} | {:?} ---", a,b);
+                println!("Either result: {:?} | {:?} ---", a, b);
                 println!("  a => {:?}", result_a);
                 println!("  b => {:?}", result_b);
                 let res = result_a.or(result_b);
@@ -141,66 +149,62 @@ impl RuleSet {
         }
     }
 
-    fn evaluate_ordered_str_old<'a>(&self, i: &'a str, ids: &[RuleId]) -> IResult<&'a str, String> {
-        let mut remaining: &str = i;
-        let mut collected = String::new();
-        for id in ids {
-            // match rule
-            let rule = self.rule(id).unwrap();
-            let (rem, found) = self.evaluate_rule_str(remaining, rule)?;
-            // update remaining and collected
-            remaining = rem;
-            collected.push_str(&found);
-        }
-        Ok((remaining, collected))
-    }
-
-    fn evaluate_ordered_str<'a>(&self, i: &'a str, ids: &[RuleId]) -> IResult<&'a str, String> {
+    fn evaluate_ordered_str<'a>(&self, i: &'a str, ids: &[RuleId]) -> Vec<(&'a str, String)> {
+        // find *all* possible results
         match ids.len() {
-            1 => self.evaluate_rule_str(i, self.rule(&ids[0]).unwrap()),
+            1 => {
+                let r0 = self.rule(&ids[0]).unwrap();
+                self.evaluate_rule_str(i, r0)
+            }
             2 => {
                 let r0 = self.rule(&ids[0]).unwrap();
                 let r1 = self.rule(&ids[1]).unwrap();
-                let (rem, (s0,s1)) = tuple(
-                    (
-                    |i0| self.evaluate_rule_str(i0, r0),
-                    |i1| self.evaluate_rule_str(i1, r1)
-                    )
-                )(i)?;
-                Ok((rem, format!("{}{}", s0,s1)))
+                let mut results = Vec::new();
+                for (rem0, found0) in self.evaluate_rule_str(i, r0) {
+                    for (rem1, found1) in self.evaluate_rule_str(rem0, r1) {
+                        results.push((rem1, format!("{}{}", found0, found1)))
+                    }
+                }
+                results
             }
             3 => {
                 let r0 = self.rule(&ids[0]).unwrap();
                 let r1 = self.rule(&ids[1]).unwrap();
                 let r2 = self.rule(&ids[2]).unwrap();
-                let (rem, (s0,s1,s2)) = tuple(
-                    (
-                    |i0| self.evaluate_rule_str(i0, r0),
-                    |i1| self.evaluate_rule_str(i1, r1),
-                    |i2| self.evaluate_rule_str(i2, r2)
-                    )
-                )(i)?;
-                Ok((rem, format!("{}{}{}", s0,s1,s2)))
+                let mut results = Vec::new();
+                for (rem0, found0) in self.evaluate_rule_str(i, r0) {
+                    for (rem1, found1) in self.evaluate_rule_str(rem0, r1) {
+                        for (rem2, found2) in self.evaluate_rule_str(rem1, r2) {
+                            results.push((rem2, format!("{}{}{}", found0, found1, found2)))
+                        }
+                    }
+                }
+                results
             }
-            _ => panic!("unsupported list length: {:?}", ids)
+            _ => panic!("unsupported list length: {:?}", ids),
         }
     }
 
-    fn evaluate_rule_str<'a>(&self, i: &'a str, rule: &Rule) -> IResult<&'a str, String> {
+    fn evaluate_rule_str<'a>(&self, i: &'a str, rule: &Rule) -> Vec<(&'a str, String)> {
         match rule {
             Rule::Literal(c) => {
-                let (rem, found_char) = nom::character::complete::char(*c)(i)?;
-                Ok((rem, found_char.to_string()))
+                // match exact char -- single element vector returned
+                let mut results = Vec::new();
+                let matched: IResult<&str, char> = nom::character::complete::char(*c)(i);
+                if let Ok((rem, found_char)) = matched {
+                    results.push((rem, found_char.to_string()));
+                }
+                results
             }
             Rule::Ordered(ids) => {
-                //println!("Ordered: {:?}", ids);
                 self.evaluate_ordered_str(i, ids)
             }
             Rule::Either((ids_a, ids_b)) => {
-                //println!("Either: {:?} | {:?}", ids_a,ids_b);
-                let res_a = self.evaluate_ordered_str(i, ids_a);
-                let res_b = self.evaluate_ordered_str(i, ids_b);
-                res_a.or(res_b)
+                // return list of results from both arms 
+                let mut results = Vec::new();
+                results.append(&mut self.evaluate_ordered_str(i, ids_a));
+                results.append(&mut self.evaluate_ordered_str(i, ids_b));
+                results
             }
         }
     }
@@ -218,7 +222,6 @@ impl RuleSet {
     }
 }
 
-
 fn part1(rules: &[&str], lines: &[&str]) -> Result<()> {
     let rules = RuleSet::parse(rules.iter());
     //println!("{:?}", &rules);
@@ -235,7 +238,6 @@ fn part1(rules: &[&str], lines: &[&str]) -> Result<()> {
     println!("Matching inputs: {}", count);
     Ok(())
 }
-
 
 fn main() -> Result<()> {
     // test inputs
@@ -290,7 +292,7 @@ fn main() -> Result<()> {
     // part2_test("day19/example-rules-part2-a.txt", "day19/example-input-part2.txt")?;
     // println!("Part 2 test B -------------");
     // part2_test("day19/example-rules-part2-b.txt", "day19/example-input-part2.txt")?;
-    
+
     println!();
     println!();
     println!();
@@ -308,19 +310,22 @@ fn main() -> Result<()> {
         //let id = RuleId(31);
         let rule = rules.rule(&id).unwrap();
 
-        for l in std::fs::read_to_string("day19/example-input-part2-all-should-match.txt")?.lines() {
+        for l in std::fs::read_to_string("day19/example-input-part2-all-should-match.txt")?.lines()
+        {
             //let res = tuple((alpha1, |s| rules.evaluate_rule_str(s, &rule)))(l);
             let res = rules.evaluate_rule_str(l, &rule);
             println!("{} => {:?}", l, res);
-            for i in 0..l.len() {
-                let l_slice = &l[i..];
-                let res_slice = rules.evaluate_rule_str(l_slice, &rule);
-                println!("    {} => {:?}", l_slice, res_slice);
+            if let Some((rem,found)) = res.iter().find(|(rem,_)| rem.len() == 0) {
+                println!("Found! rem {} found {}", rem, found);
+                assert_eq!(found, l)
             }
+            // for i in 0..l.len() {
+            //     let l_slice = &l[i..];
+            //     let res_slice = rules.evaluate_rule_str(l_slice, &rule);
+            //     println!("    {} => {:?}", l_slice, res_slice);
+            // }
         }
     }
-
-
 
     Ok(())
 }
