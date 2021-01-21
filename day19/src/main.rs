@@ -310,14 +310,18 @@ fn main() -> Result<()> {
         //let id = RuleId(31);
         let rule = rules.rule(&id).unwrap();
 
-        for l in std::fs::read_to_string("day19/example-input-part2-all-should-match.txt")?.lines()
+        let mut count = 0;
+        for l in std::fs::read_to_string("day19/example-input-part2.txt")?.lines()
         {
             //let res = tuple((alpha1, |s| rules.evaluate_rule_str(s, &rule)))(l);
             let res = rules.evaluate_rule_str(l, &rule);
             println!("{} => {:?}", l, res);
             if let Some((rem,found)) = res.iter().find(|(rem,_)| rem.len() == 0) {
                 println!("Found! rem {} found {}", rem, found);
-                assert_eq!(found, l)
+                assert_eq!(found, l);
+                count += 1;
+            } else {
+                println!("NOT FOUND: {}", l);
             }
             // for i in 0..l.len() {
             //     let l_slice = &l[i..];
@@ -325,6 +329,7 @@ fn main() -> Result<()> {
             //     println!("    {} => {:?}", l_slice, res_slice);
             // }
         }
+        println!("matching count: {}", count);
     }
 
     Ok(())
