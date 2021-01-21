@@ -1,10 +1,10 @@
-use std::{collections::HashMap, path::Path};
+use std::{collections::HashMap};
 
 use anyhow::{anyhow, Result};
 use nom::{
     branch::alt,
     bytes::complete::tag,
-    character::complete::{alpha1, anychar, one_of, space1},
+    character::complete::{anychar, one_of, space1},
     combinator::{map_res, recognize},
     multi::{many1, separated_list1},
     sequence::{delimited, tuple},
@@ -97,58 +97,6 @@ impl RuleSet {
         self.0.get(id)
     }
 
-    fn evaluate_ordered<'a>(&self, i: &'a str, ids: &[RuleId]) -> IResult<&'a str, ()> {
-        let mut remaining: &str = i;
-        for id in ids {
-            let rule = self.0.get(id).unwrap();
-            let res = self.evaluate_rule(remaining, rule)?;
-            remaining = res.0
-        }
-        Ok((remaining, ()))
-    }
-
-    fn evaluate_rule<'a>(&self, i: &'a str, rule: &Rule) -> IResult<&'a str, ()> {
-        use nom::character::complete::char;
-        fn result_ok() -> Result<()> {
-            Ok(())
-        }
-        match rule {
-            Rule::Literal(c) => map_res(char(*c), |_| result_ok())(i),
-            Rule::Ordered(ids) => {
-                println!("Ordered: {:?}", ids);
-                let mut remaining: &str = i;
-                for id in ids {
-                    let rule = self.0.get(id).unwrap();
-                    let result = self.evaluate_rule(remaining, rule);
-                    println!("  {} => {:?}", id.0, result);
-                    let res = result?;
-                    remaining = res.0
-                }
-                Ok((remaining, ()))
-            }
-            Rule::Either((a, b)) => {
-                println!("Either test: {:?} | {:?}", a, b);
-                let result_a = self.evaluate_ordered(i, a);
-                let result_b = self.evaluate_ordered(i, b);
-                println!("Either result: {:?} | {:?} ---", a, b);
-                println!("  a => {:?}", result_a);
-                println!("  b => {:?}", result_b);
-                let res = result_a.or(result_b);
-                // if let Ok(res_a) = self.evaluate_ordered(i, a) {
-                //     Ok(res_a)
-                // } else if let Ok(res_b) = self.evaluate_ordered(i, b) {
-                //     Ok(res_b)
-                // } else {
-                //     Err(nom::Err::Failure(nom::error::Error::new(
-                //         i,
-                //         nom::error::ErrorKind::TooLarge,
-                //     )))
-                // }
-                res
-            }
-        }
-    }
-
     fn evaluate_ordered_str<'a>(&self, i: &'a str, ids: &[RuleId]) -> Vec<(&'a str, String)> {
         // find *all* possible results
         match ids.len() {
@@ -196,11 +144,9 @@ impl RuleSet {
                 }
                 results
             }
-            Rule::Ordered(ids) => {
-                self.evaluate_ordered_str(i, ids)
-            }
+            Rule::Ordered(ids) => self.evaluate_ordered_str(i, ids),
             Rule::Either((ids_a, ids_b)) => {
-                // return list of results from both arms 
+                // return list of results from both arms
                 let mut results = Vec::new();
                 results.append(&mut self.evaluate_ordered_str(i, ids_a));
                 results.append(&mut self.evaluate_ordered_str(i, ids_b));
@@ -209,33 +155,53 @@ impl RuleSet {
         }
     }
 
-    // check to see if the supplied line matches rule 0
-    fn matches_rule_0(&self, i: &str) -> bool {
-        let rule = self.0.get(&RuleId(0)).unwrap();
-        if let Ok(res) = self.evaluate_rule(i, rule) {
-            // needs to be a complete match -- no remaining input
-            if res.0.is_empty() {
-                return true;
-            }
-        }
-        false
+    fn evaluate_rule_complete<'a>(&self, i: &'a str, rule: &Rule) -> Option<(&'a str, String)> {
+        self.evaluate_rule_str(i, rule)
+            .into_iter()
+            .find(|(rem, _)| rem.is_empty())
     }
 }
 
-fn part1(rules: &[&str], lines: &[&str]) -> Result<()> {
-    let rules = RuleSet::parse(rules.iter());
-    //println!("{:?}", &rules);
-
-    let rules = rules?;
+fn test_rules(rules: &RuleSet, start_rule: RuleId, lines: &[&str]) -> Result<()> {
+    let rule = rules
+        .rule(&start_rule)
+        .ok_or(anyhow!("missing rule {:?}", start_rule))?;
     let mut count = 0;
     for i in lines.iter() {
-        let res = rules.matches_rule_0(i);
+        let res = rules.evaluate_rule_complete(i, &rule).is_some();
         if res {
             count += 1;
         }
-        println!("{} => {}", i, res);
+        //println!("{} => {}", i, res);
     }
     println!("Matching inputs: {}", count);
+    Ok(())
+}
+
+// debugging code 
+#[allow(dead_code)]
+fn debug_test() -> Result<()> {
+    let rules = RuleSet::parse_from_file("day19/example-rules-part2-b.txt")?;
+    let id = RuleId(0);
+    // 8 or 11 are the new self-referential ones
+    //let id = RuleId(11);
+    //let id = RuleId(42);
+    //let id = RuleId(31);
+    let rule = rules.rule(&id).unwrap();
+
+    let mut count = 0;
+    for l in std::fs::read_to_string("day19/example-input-part2.txt")?.lines() {
+        let res = rules.evaluate_rule_str(l, &rule);
+        println!("{} => {:?}", l, res);
+        if let Some((rem, found)) = res.iter().find(|(rem, _)| rem.len() == 0) {
+            println!("+ FOUND rem {} found {}", rem, found);
+            assert_eq!(found, l);
+            count += 1;
+        } else {
+            println!("- NOT FOUND: {}", l);
+        }
+    }
+    println!("matching count: {}", count);
     Ok(())
 }
 
@@ -256,82 +222,30 @@ fn main() -> Result<()> {
         r#"aaabbb"#,
         r#"aaaabbb"#,
     ];
-    // part1(&example_rules, &example_input)?;
+    test_rules(
+        &RuleSet::parse(example_rules.iter())?,
+        RuleId(0),
+        &example_input,
+    )?;
 
     // part 1 actual
-    // println!("Part 1 ------------------------------------------------");
-    // {
-    //     let rules_string = std::fs::read_to_string("day19/rules-part1.txt")?;
-    //     let lines_string = std::fs::read_to_string("day19/lines.txt")?;
-    //     let rules: Vec<&str> = rules_string.lines().collect();
-    //     let lines: Vec<&str> = lines_string.lines().collect();
-    //     part1(&rules, &lines)?;
-    // }
+    let lines_string = std::fs::read_to_string("day19/lines.txt")?;
+    let lines: Vec<&str> = lines_string.lines().collect();
+    println!("Part 1 ------------------------------------------------");
+    {
+        let rules = RuleSet::parse_from_file("day19/rules-part1.txt")?;
+        test_rules(&rules, RuleId(0), &lines)?;
+        // correct is 113
+    }   
 
     // part 2 actual
-    // println!("Part 2 ------------------------------------------------");
-    // {
-    //     let rules_string = std::fs::read_to_string("day19/rules-part2.txt")?;
-    //     let lines_string = std::fs::read_to_string("day19/lines.txt")?;
-    //     let rules: Vec<&str> = rules_string.lines().collect();
-    //     let lines: Vec<&str> = lines_string.lines().collect();
-    //     part1(&rules, &lines)?;
-    //     // 141 is the WRONG answer
-    // }
-
-    fn part2_test(rules_path: &str, lines_path: &str) -> Result<()> {
-        let rules_string = std::fs::read_to_string(rules_path)?;
-        let lines_string = std::fs::read_to_string(lines_path)?;
-        let rules: Vec<&str> = rules_string.lines().collect();
-        let lines: Vec<&str> = lines_string.lines().collect();
-        part1(&rules, &lines)?;
-        Ok(())
-    }
-
-    // println!("Part 2 test A -------------");
-    // part2_test("day19/example-rules-part2-a.txt", "day19/example-input-part2.txt")?;
-    // println!("Part 2 test B -------------");
-    // part2_test("day19/example-rules-part2-b.txt", "day19/example-input-part2.txt")?;
-
-    println!();
-    println!();
-    println!();
-    println!();
-    println!("Part 2 test B these should all match -------------");
-    //part2_test("day19/example-rules-part2-b.txt", "day19/example-input-part2-all-match.txt")?;
-    //part2_test("day19/example-rules-part2-b.txt", "day19/example-input-part2-fail-should-match.txt")?;
-
+    println!("Part 2 ------------------------------------------------");
     {
-        let rules = RuleSet::parse_from_file("day19/example-rules-part2-b.txt")?;
-        let id = RuleId(0);
-        // 8 or 11 are the new self-referential ones
-        //let id = RuleId(11);
-        //let id = RuleId(42);
-        //let id = RuleId(31);
-        let rule = rules.rule(&id).unwrap();
-
-        let mut count = 0;
-        for l in std::fs::read_to_string("day19/example-input-part2.txt")?.lines()
-        {
-            //let res = tuple((alpha1, |s| rules.evaluate_rule_str(s, &rule)))(l);
-            let res = rules.evaluate_rule_str(l, &rule);
-            println!("{} => {:?}", l, res);
-            if let Some((rem,found)) = res.iter().find(|(rem,_)| rem.len() == 0) {
-                println!("Found! rem {} found {}", rem, found);
-                assert_eq!(found, l);
-                count += 1;
-            } else {
-                println!("NOT FOUND: {}", l);
-            }
-            // for i in 0..l.len() {
-            //     let l_slice = &l[i..];
-            //     let res_slice = rules.evaluate_rule_str(l_slice, &rule);
-            //     println!("    {} => {:?}", l_slice, res_slice);
-            // }
-        }
-        println!("matching count: {}", count);
+        let rules = RuleSet::parse_from_file("day19/rules-part2.txt")?;
+        test_rules(&rules, RuleId(0), &lines)?; 
+        // correct is 253
     }
-
+   
     Ok(())
 }
 
