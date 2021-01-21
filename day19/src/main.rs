@@ -134,6 +134,10 @@ impl RuleSet {
     //     }
     // }
 
+    // can make this more efficient by not assembling the String return; we're not actually using it
+    // for anything besides debugging.
+
+    // evaluate a list of rules in order
     fn evaluate_ordered_str<'a>(&self, i: &'a str, ids: &[RuleId]) -> Vec<(&'a str, String)> {
         // match first, then test remainder
         let rule = self.rule(&ids[0]).unwrap();
@@ -153,6 +157,7 @@ impl RuleSet {
         results
     }
 
+    // evaluate a rule, returning all possible matches
     fn evaluate_rule_str<'a>(&self, i: &'a str, rule: &Rule) -> Vec<(&'a str, String)> {
         match rule {
             Rule::Literal(c) => {
@@ -175,6 +180,7 @@ impl RuleSet {
         }
     }
 
+    // evaluate a rule, returning a valid complete match if found
     fn evaluate_rule_complete<'a>(&self, i: &'a str, rule: &Rule) -> Option<(&'a str, String)> {
         self.evaluate_rule_str(i, rule)
             .into_iter()
