@@ -97,40 +97,60 @@ impl RuleSet {
         self.0.get(id)
     }
 
+    // simplified below
+    // fn evaluate_ordered_str_old<'a>(&self, i: &'a str, ids: &[RuleId]) -> Vec<(&'a str, String)> {
+    //     // find *all* possible results
+    //     match ids.len() {
+    //         1 => {
+    //             let r0 = self.rule(&ids[0]).unwrap();
+    //             self.evaluate_rule_str(i, r0)
+    //         }
+    //         2 => {
+    //             let r0 = self.rule(&ids[0]).unwrap();
+    //             let r1 = self.rule(&ids[1]).unwrap();
+    //             let mut results = Vec::new();
+    //             for (rem0, found0) in self.evaluate_rule_str(i, r0) {
+    //                 for (rem1, found1) in self.evaluate_rule_str(rem0, r1) {
+    //                     results.push((rem1, format!("{}{}", found0, found1)))
+    //                 }
+    //             }
+    //             results
+    //         }
+    //         3 => {
+    //             let r0 = self.rule(&ids[0]).unwrap();
+    //             let r1 = self.rule(&ids[1]).unwrap();
+    //             let r2 = self.rule(&ids[2]).unwrap();
+    //             let mut results = Vec::new();
+    //             for (rem0, found0) in self.evaluate_rule_str(i, r0) {
+    //                 for (rem1, found1) in self.evaluate_rule_str(rem0, r1) {
+    //                     for (rem2, found2) in self.evaluate_rule_str(rem1, r2) {
+    //                         results.push((rem2, format!("{}{}{}", found0, found1, found2)))
+    //                     }
+    //                 }
+    //             }
+    //             results
+    //         }
+    //         _ => panic!("unsupported list length: {:?}", ids),
+    //     }
+    // }
+
     fn evaluate_ordered_str<'a>(&self, i: &'a str, ids: &[RuleId]) -> Vec<(&'a str, String)> {
-        // find *all* possible results
-        match ids.len() {
-            1 => {
-                let r0 = self.rule(&ids[0]).unwrap();
-                self.evaluate_rule_str(i, r0)
-            }
-            2 => {
-                let r0 = self.rule(&ids[0]).unwrap();
-                let r1 = self.rule(&ids[1]).unwrap();
-                let mut results = Vec::new();
-                for (rem0, found0) in self.evaluate_rule_str(i, r0) {
-                    for (rem1, found1) in self.evaluate_rule_str(rem0, r1) {
-                        results.push((rem1, format!("{}{}", found0, found1)))
-                    }
+        // match first, then test remainder
+        let rule = self.rule(&ids[0]).unwrap();
+        let mut results = Vec::new();
+        for (rem0, found0) in self.evaluate_rule_str(i, rule) {
+            if ids.len() > 1 {
+                // test remaining rules in our list
+                let remaining_ids = &ids[1..];
+                for (rem1, found1) in self.evaluate_ordered_str(rem0, remaining_ids) {
+                    results.push((rem1, format!("{}{}", found0, found1)));
                 }
-                results
+            } else {
+                // no remaining rules; end of the list; output our results
+                results.push((rem0, found0));
             }
-            3 => {
-                let r0 = self.rule(&ids[0]).unwrap();
-                let r1 = self.rule(&ids[1]).unwrap();
-                let r2 = self.rule(&ids[2]).unwrap();
-                let mut results = Vec::new();
-                for (rem0, found0) in self.evaluate_rule_str(i, r0) {
-                    for (rem1, found1) in self.evaluate_rule_str(rem0, r1) {
-                        for (rem2, found2) in self.evaluate_rule_str(rem1, r2) {
-                            results.push((rem2, format!("{}{}{}", found0, found1, found2)))
-                        }
-                    }
-                }
-                results
-            }
-            _ => panic!("unsupported list length: {:?}", ids),
         }
+        results
     }
 
     fn evaluate_rule_str<'a>(&self, i: &'a str, rule: &Rule) -> Vec<(&'a str, String)> {
