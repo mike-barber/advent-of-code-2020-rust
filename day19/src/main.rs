@@ -141,7 +141,7 @@ impl RuleSet {
         }
     }
 
-    fn evaluate_ordered_str<'a>(&self, i: &'a str, ids: &[RuleId]) -> IResult<&'a str, String> {
+    fn evaluate_ordered_str_old<'a>(&self, i: &'a str, ids: &[RuleId]) -> IResult<&'a str, String> {
         let mut remaining: &str = i;
         let mut collected = String::new();
         for id in ids {
@@ -153,6 +153,37 @@ impl RuleSet {
             collected.push_str(&found);
         }
         Ok((remaining, collected))
+    }
+
+    fn evaluate_ordered_str<'a>(&self, i: &'a str, ids: &[RuleId]) -> IResult<&'a str, String> {
+        match ids.len() {
+            1 => self.evaluate_rule_str(i, self.rule(&ids[0]).unwrap()),
+            2 => {
+                let r0 = self.rule(&ids[0]).unwrap();
+                let r1 = self.rule(&ids[1]).unwrap();
+                let (rem, (s0,s1)) = tuple(
+                    (
+                    |i0| self.evaluate_rule_str(i0, r0),
+                    |i1| self.evaluate_rule_str(i1, r1)
+                    )
+                )(i)?;
+                Ok((rem, format!("{}{}", s0,s1)))
+            }
+            3 => {
+                let r0 = self.rule(&ids[0]).unwrap();
+                let r1 = self.rule(&ids[1]).unwrap();
+                let r2 = self.rule(&ids[2]).unwrap();
+                let (rem, (s0,s1,s2)) = tuple(
+                    (
+                    |i0| self.evaluate_rule_str(i0, r0),
+                    |i1| self.evaluate_rule_str(i1, r1),
+                    |i2| self.evaluate_rule_str(i2, r2)
+                    )
+                )(i)?;
+                Ok((rem, format!("{}{}{}", s0,s1,s2)))
+            }
+            _ => panic!("unsupported list length: {:?}", ids)
+        }
     }
 
     fn evaluate_rule_str<'a>(&self, i: &'a str, rule: &Rule) -> IResult<&'a str, String> {
@@ -270,9 +301,9 @@ fn main() -> Result<()> {
 
     {
         let rules = RuleSet::parse_from_file("day19/example-rules-part2-b.txt")?;
-        //let id = RuleId(0);
+        let id = RuleId(0);
         // 8 or 11 are the new self-referential ones
-        let id = RuleId(11);
+        //let id = RuleId(11);
         //let id = RuleId(42);
         //let id = RuleId(31);
         let rule = rules.rule(&id).unwrap();
