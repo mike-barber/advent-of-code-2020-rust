@@ -270,17 +270,12 @@ fn main() -> Result<()> {
 
     {
         let rules = RuleSet::parse_from_file("day19/example-rules-part2-b.txt")?;
-        // let id = RuleId(0);
+        //let id = RuleId(0);
+        // 8 or 11 are the new self-referential ones
+        let id = RuleId(11);
         //let id = RuleId(42);
-        let id = RuleId(31);
+        //let id = RuleId(31);
         let rule = rules.rule(&id).unwrap();
-
-        {
-            let test = "b";
-            let res = rules.evaluate_rule_str(test, &rule);
-            println!("{} => {:?}", test, res);
-        }
-
 
         for l in std::fs::read_to_string("day19/example-input-part2-all-should-match.txt")?.lines() {
             //let res = tuple((alpha1, |s| rules.evaluate_rule_str(s, &rule)))(l);
