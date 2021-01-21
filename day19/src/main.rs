@@ -1,15 +1,7 @@
-use std::{collections::HashMap};
+use std::{collections::HashMap, path::Path};
 
 use anyhow::{anyhow, Result};
-use nom::{
-    branch::alt,
-    bytes::complete::tag,
-    character::complete::{anychar, one_of, space1},
-    combinator::{map_res, recognize},
-    multi::{many1, separated_list1},
-    sequence::{delimited, tuple},
-    IResult,
-};
+use nom::{IResult, branch::alt, bytes::complete::tag, character::complete::{alpha1, anychar, one_of, space1}, combinator::{map_res, recognize}, multi::{many1, separated_list1}, sequence::{delimited, tuple}};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 struct RuleId(usize);
@@ -87,6 +79,16 @@ impl RuleSet {
         Ok(RuleSet(rules))
     }
 
+    fn parse_from_file(path: &str) -> Result<Self> {
+        let all = std::fs::read_to_string(path)?;
+        let lines: Vec<&str> = all.lines().collect();
+        Self::parse(lines.iter())
+    }
+
+    fn rule(&self, id: &RuleId) -> Option<&Rule> {
+        self.0.get(id)
+    }
+
     fn evaluate_ordered<'a>(&self, i: &'a str, ids: &[RuleId]) -> IResult<&'a str, ()> {
         let mut remaining: &str = i;
         for id in ids {
@@ -139,6 +141,39 @@ impl RuleSet {
         }
     }
 
+    fn evaluate_ordered_str<'a>(&self, i: &'a str, ids: &[RuleId]) -> IResult<&'a str, String> {
+        let mut remaining: &str = i;
+        let mut collected = String::new();
+        for id in ids {
+            // match rule
+            let rule = self.rule(id).unwrap();
+            let (rem, found) = self.evaluate_rule_str(remaining, rule)?;
+            // update remaining and collected
+            remaining = rem;
+            collected.push_str(&found);
+        }
+        Ok((remaining, collected))
+    }
+
+    fn evaluate_rule_str<'a>(&self, i: &'a str, rule: &Rule) -> IResult<&'a str, String> {
+        match rule {
+            Rule::Literal(c) => {
+                let (rem, found_char) = nom::character::complete::char(*c)(i)?;
+                Ok((rem, found_char.to_string()))
+            }
+            Rule::Ordered(ids) => {
+                //println!("Ordered: {:?}", ids);
+                self.evaluate_ordered_str(i, ids)
+            }
+            Rule::Either((ids_a, ids_b)) => {
+                //println!("Either: {:?} | {:?}", ids_a,ids_b);
+                let res_a = self.evaluate_ordered_str(i, ids_a);
+                let res_b = self.evaluate_ordered_str(i, ids_b);
+                res_a.or(res_b)
+            }
+        }
+    }
+
     // check to see if the supplied line matches rule 0
     fn matches_rule_0(&self, i: &str) -> bool {
         let rule = self.0.get(&RuleId(0)).unwrap();
@@ -169,6 +204,7 @@ fn part1(rules: &[&str], lines: &[&str]) -> Result<()> {
     println!("Matching inputs: {}", count);
     Ok(())
 }
+
 
 fn main() -> Result<()> {
     // test inputs
@@ -230,7 +266,35 @@ fn main() -> Result<()> {
     println!();
     println!("Part 2 test B these should all match -------------");
     //part2_test("day19/example-rules-part2-b.txt", "day19/example-input-part2-all-match.txt")?;
-    part2_test("day19/example-rules-part2-b.txt", "day19/example-input-part2-fail-should-match.txt")?;
+    //part2_test("day19/example-rules-part2-b.txt", "day19/example-input-part2-fail-should-match.txt")?;
+
+    {
+        let rules = RuleSet::parse_from_file("day19/example-rules-part2-b.txt")?;
+        // let id = RuleId(0);
+        //let id = RuleId(42);
+        let id = RuleId(31);
+        let rule = rules.rule(&id).unwrap();
+
+        {
+            let test = "b";
+            let res = rules.evaluate_rule_str(test, &rule);
+            println!("{} => {:?}", test, res);
+        }
+
+
+        for l in std::fs::read_to_string("day19/example-input-part2-all-should-match.txt")?.lines() {
+            //let res = tuple((alpha1, |s| rules.evaluate_rule_str(s, &rule)))(l);
+            let res = rules.evaluate_rule_str(l, &rule);
+            println!("{} => {:?}", l, res);
+            for i in 0..l.len() {
+                let l_slice = &l[i..];
+                let res_slice = rules.evaluate_rule_str(l_slice, &rule);
+                println!("    {} => {:?}", l_slice, res_slice);
+            }
+        }
+    }
+
+
 
     Ok(())
 }
