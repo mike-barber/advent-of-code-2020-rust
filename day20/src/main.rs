@@ -1,7 +1,7 @@
 use std::{collections::HashMap, fmt::Display, hash::Hash, ops::{Add, AddAssign}, println, writeln};
 
-use eyre::{eyre, Result, WrapErr};
-use ndarray::{arr1, arr2, Array, Array2, ShapeBuilder};
+use eyre::{eyre, Result};
+use ndarray::{arr1, arr2, Array, Array2};
 
 //type Image = Array2::<char>;
 //type Coord = Array1::<i32>;
@@ -161,8 +161,7 @@ struct RotatedTile<'a> {
 
 impl<'a> RotatedTile<'a> {
     fn get(&self, c: &Coord) -> Option<char> {
-        let c = self.rotation.apply(c, self.tile.dim);
-        self.tile.get(&c)
+        self.tile.get(&c.rotate(&self.rotation, self.tile.dim))
     }
 
     fn row_iter(&self, row: i32) -> TileIterator {
@@ -412,7 +411,7 @@ fn main() -> Result<()> {
         println!("Rotate {:?} =>\n{}", r, tile.rotated(*r));
     }
 
-    let tiles = parse_tiles("day20/example-input.txt", 10)?;
+    let tiles = parse_tiles("day20/input.txt", 10)?;
     for t in &tiles {
         println!("id {:?}\n{}", t.id, &t);
     }
