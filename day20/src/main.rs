@@ -1,4 +1,9 @@
-use std::{collections::HashMap, fmt::Display, ops::{Add, AddAssign}};
+use std::{
+    collections::HashMap,
+    fmt::Display,
+    hash::Hash,
+    ops::{Add, AddAssign},
+};
 
 use eyre::{eyre, Result, WrapErr};
 use ndarray::{arr1, arr2, Array, Array2, ShapeBuilder};
@@ -58,17 +63,21 @@ impl Rotation {
     }
 
     // get next rotation, but stop after 270 degrees
-    fn next_stop(&self) -> Option<Rotation> {
-        match self {
-            Rotation::R0 => Some(Rotation::R90),
-            Rotation::R90 => Some(Rotation::R180),
-            Rotation::R180 => Some(Rotation::R270),
-            Rotation::R270 => None,
-        }
+    // fn next_stop(&self) -> Option<Rotation> {
+    //     match self {
+    //         Rotation::R0 => Some(Rotation::R90),
+    //         Rotation::R90 => Some(Rotation::R180),
+    //         Rotation::R180 => Some(Rotation::R270),
+    //         Rotation::R270 => None,
+    //     }
+    // }
+    fn all() -> &'static [Rotation] {
+        use Rotation::*;
+        &[R0, R90, R180, R270]
     }
 }
 
-#[derive(Debug,Clone,Copy,Eq,PartialEq)]
+#[derive(Debug, Clone, Copy, Eq, PartialEq, Hash)]
 struct Id(i32);
 
 #[derive(Debug)]
@@ -111,7 +120,7 @@ impl<'a> Iterator for TileIterator<'a> {
     }
 }
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, Eq, PartialEq, Hash)]
 enum Edge {
     Top,
     Bottom,
@@ -125,8 +134,11 @@ impl Edge {
             Top => Bottom,
             Bottom => Top,
             Left => Right,
-            Right => Left
+            Right => Left,
         }
+    }
+    fn all() -> &'static [Edge] {
+        &[Edge::Top, Edge::Bottom, Edge::Left, Edge::Right]
     }
 }
 
@@ -181,13 +193,87 @@ impl<'a> Display for RotatedTile<'a> {
 }
 
 struct TileMap<'a> {
-    tiles: HashMap<i32, TileRelation<'a>>
+    tiles: HashMap<Id, TileRelation<'a>>,
+    all_ids: Vec<Id>,
 }
 
 struct TileRelation<'a> {
     tile: &'a Tile,
     rotated: Option<RotatedTile<'a>>,
-    neighbours: HashMap<Edge, Option<i32>> 
+    neighbours: HashMap<Edge, Id>,
+}
+
+impl<'a> TileMap<'a> {
+    fn create(tiles: &'a [Tile]) -> Self {
+        let mut tile_map = HashMap::new();
+        for t in tiles {
+            let relation = TileRelation {
+                tile: t,
+                rotated: None,
+                neighbours: HashMap::new(),
+            };
+            tile_map.insert(t.id, relation);
+        }
+        let all_ids = tile_map.keys().copied().collect();
+        TileMap {
+            tiles: tile_map,
+            all_ids,
+        }
+    }
+
+    // solve once, and return true if something was done
+    fn solve_one(&mut self, all_ids: &[Id], reference_id: Id) -> bool {
+        let ref_rel = self.tiles.get_mut(&reference_id).unwrap();
+        for edge in Edge::all() {
+            // already have a relationship; skip
+            if ref_rel.neighbours.contains_key(edge) {
+                continue;
+            }
+            // find a new relationship
+            for id in all_ids {
+                if *id == reference_id {
+                    continue; // skip self
+                }
+                let other_rel = self.tiles.get_mut(id).unwrap();
+                if let Some(rotated) = other_rel.rotated {
+                    // already rotated -- just check and associate if found
+                    let adjacent_edge = edge.adjacent();
+                    if !other_rel.neighbours.contains_key(&adjacent_edge)
+                        && itertools::equal(
+                            ref_rel.rotated.unwrap().edge_iter(*edge),
+                            rotated.edge_iter(adjacent_edge),
+                        )
+                    {
+                        ref_rel.neighbours.insert(*edge, *id);
+                        other_rel.neighbours.insert(*edge, reference_id);
+                        return true;
+                    }
+                } else {
+                    // not rotated -- find a rotation
+                    let adjacent_edge = edge.adjacent();
+                    for rotation in Rotation::all() {
+                        let rotated = other_rel.tile.rotated(*rotation);
+                        if itertools::equal(
+                            ref_rel.rotated.unwrap().edge_iter(*edge),
+                            rotated.edge_iter(adjacent_edge),
+                        ) {
+                            // record association and lock in rotation
+                            ref_rel.neighbours.insert(*edge, *id);
+                            other_rel.neighbours.insert(*edge, reference_id);
+                            other_rel.rotated = Some(rotated);
+                            return true;
+                        }
+                    }
+                }
+            }
+        }
+        return false;
+    }
+
+    fn solve(&mut self, start_id: Id) {
+        let all_ids = self.all_ids.clone();
+        self.solve_one(&all_ids, start_id);
+    }
 }
 
 // quick n dirty
@@ -212,7 +298,11 @@ fn parse_tiles(path: &str, dim: i32) -> Result<Vec<Tile>> {
             }
         }
 
-        let tile = Tile { image, id: Id(id), dim };
+        let tile = Tile {
+            image,
+            id: Id(id),
+            dim,
+        };
         tiles.push(tile);
     }
 
