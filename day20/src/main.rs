@@ -1,7 +1,13 @@
-use std::{collections::HashMap, fmt::Display, hash::Hash, ops::{Add, AddAssign}, println, writeln};
+use std::{
+    collections::HashMap,
+    fmt::Display,
+    hash::Hash,
+    ops::{Add, AddAssign},
+    println, writeln,
+};
 
 use eyre::{eyre, Result};
-use ndarray::{arr1, arr2, Array, Array2};
+use ndarray::{arr1, arr2, azip, s, Array, Array2};
 
 //type Image = Array2::<char>;
 //type Coord = Array1::<i32>;
@@ -9,7 +15,7 @@ use ndarray::{arr1, arr2, Array, Array2};
 #[derive(Debug, Clone, Copy, Eq, PartialEq)]
 struct Coord(i32, i32);
 impl Coord {
-    fn rotate(&self, r: &Rotation, dim:i32) -> Self {
+    fn rotate(&self, r: &Rotation, dim: i32) -> Self {
         r.apply(&self, dim)
     }
 }
@@ -31,7 +37,7 @@ impl AddAssign for Coord {
     }
 }
 
-// rotate and/or flip 
+// rotate and/or flip
 #[derive(Debug, Copy, Clone, Eq, PartialEq)]
 enum Rotation {
     R0,
@@ -41,7 +47,7 @@ enum Rotation {
     F0,
     F90,
     F180,
-    F270
+    F270,
 }
 impl Rotation {
     // 90 degree rotation
@@ -49,13 +55,13 @@ impl Rotation {
         Coord(dim - 1 - c.1, c.0)
     }
     // vertical flip (rows)
-    fn flip(c: &Coord, dim:i32) -> Coord {
+    fn flip(c: &Coord, dim: i32) -> Coord {
         Coord(dim - 1 - c.0, c.1)
     }
 
-    fn apply(&self, c:&Coord, dim:i32) -> Coord {
+    fn apply(&self, c: &Coord, dim: i32) -> Coord {
         let r = |c| Self::cw90(c, dim);
-        let f=|c| Self::flip(c,dim);
+        let f = |c| Self::flip(c, dim);
         match self {
             // rotate only
             Rotation::R0 => *c,
@@ -66,7 +72,7 @@ impl Rotation {
             Rotation::F0 => f(c),
             Rotation::F90 => f(&r(c)),
             Rotation::F180 => f(&r(&r(c))),
-            Rotation::F270 => f(&r(&r(&r(c))))
+            Rotation::F270 => f(&r(&r(&r(c)))),
         }
     }
 
@@ -84,7 +90,7 @@ impl Display for Id {
     }
 }
 
-
+#[derive(Clone)]
 struct Tile {
     image: Array2<char>,
     dim: i32,
@@ -92,7 +98,7 @@ struct Tile {
 }
 impl Tile {
     fn get(&self, c: &Coord) -> Option<char> {
-        self.image.get((c.0 as usize, c.1 as usize)).map(|ch| *ch)
+        self.image.get((c.0 as usize, c.1 as usize)).copied()
     }
 
     fn rotated(&self, rotation: Rotation) -> RotatedTile {
@@ -188,13 +194,39 @@ impl<'a> RotatedTile<'a> {
             Edge::Right => self.col_iter(far_index),
         }
     }
+
+    fn render(&self, range: &std::ops::Range<i32>) -> Tile {
+        let mut image = Array2::from_elem((range.len(), range.len()), 'X');
+        for (ro, r) in range.clone().enumerate() {
+            for (co, c) in range.clone().enumerate() {
+                let src = self.get(&Coord(r, c)).unwrap();
+                let dst = image.get_mut((ro, co)).unwrap();
+                *dst = src;
+            }
+        }
+        Tile {
+            dim: range.len() as i32,
+            id: self.tile.id,
+            image,
+        }
+    }
+
+    fn render_borderless_tile(&self) -> Tile {
+        let range = 1..self.tile.dim - 1;
+        self.render(&range)
+    }
+
+    fn render_tile(&self) -> Tile {
+        let range = 0..self.tile.dim;
+        self.render(&range)
+    }
 }
 
 impl<'a> Display for RotatedTile<'a> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         for r in 0..self.tile.dim {
             for c in 0..self.tile.dim {
-                let ch = self.get(&Coord(r, c)).ok_or_else(|| std::fmt::Error)?;
+                let ch = self.get(&Coord(r, c)).ok_or(std::fmt::Error)?;
                 write!(f, "{}", ch)?;
             }
             writeln!(f)?;
@@ -252,6 +284,10 @@ impl<'a> TileMap<'a> {
         }
     }
 
+    fn get_relation(&self, id: &Id) -> Option<&TileRelation> {
+        self.tiles.get(id)
+    }
+
     // solve once, and return true if something was done
     fn solve_one(&self, all_ids: &[Id], reference_id: Id) -> Option<FoundRelation> {
         let ref_relation = self.tiles.get(&reference_id).unwrap();
@@ -306,7 +342,7 @@ impl<'a> TileMap<'a> {
 
     fn solve(&mut self) {
         let all_ids = self.all_ids.clone();
-        
+
         // lock rotation of first tile (need to start somewhere)
         {
             let t = self.tiles.get_mut(&all_ids[0]).unwrap();
@@ -324,19 +360,23 @@ impl<'a> TileMap<'a> {
                 // otherwise find a new relationship and record it
                 if let Some(new_relation) = self.solve_one(&all_ids, *this_id) {
                     println!("new relation: {} => {:?}", this_id, new_relation);
-    
+
                     // this -> other
                     let this_rel = self.tiles.get_mut(&this_id).unwrap();
-                    this_rel.neighbours.insert(new_relation.ref_edge, new_relation.other_id);
-                    
+                    this_rel
+                        .neighbours
+                        .insert(new_relation.ref_edge, new_relation.other_id);
+
                     // other -> this (and set rotation if found)
                     let other_rel = self.tiles.get_mut(&new_relation.other_id).unwrap();
-                    other_rel.neighbours.insert(new_relation.ref_edge.adjacent(), *this_id);
+                    other_rel
+                        .neighbours
+                        .insert(new_relation.ref_edge.adjacent(), *this_id);
                     if let Some(new_rotation) = new_relation.other_new_rotation {
                         other_rel.rotated = Some(other_rel.tile.rotated(new_rotation))
                     }
 
-                    // record change occurred 
+                    // record change occurred
                     changed = true;
                 }
             }
@@ -346,7 +386,7 @@ impl<'a> TileMap<'a> {
             }
         }
 
-        // found 
+        // found
         println!("{:?}", &self);
     }
 }
@@ -368,7 +408,9 @@ fn parse_tiles(path: &str, dim: i32) -> Result<Vec<Tile>> {
         for r in 0..dim {
             let row_str = lines.next().ok_or_else(|| eyre!("expected tile row"))?;
             for (c, ch) in row_str.chars().enumerate() {
-                let elem = image.get_mut((r as usize, c)).ok_or(eyre!("dim error"))?;
+                let elem = image
+                    .get_mut((r as usize, c))
+                    .ok_or_else(|| eyre!("dim error"))?;
                 *elem = ch;
             }
         }
@@ -389,29 +431,34 @@ fn parse_tiles(path: &str, dim: i32) -> Result<Vec<Tile>> {
 ///  - https://docs.rs/eyre/0.6.5/eyre/ for fun, instead of related `anyhow`
 ///  - https://docs.rs/ndarray/0.14.0/ndarray/type.Array.html (used before)
 fn main() -> Result<()> {
-    println!("Hello, world!");
+    {
+        let coord = arr1(&[1i32, 2]);
+        let rotate1 = arr2(&[[0, -1], [1, 0]]);
 
-    let coord = arr1(&[1i32, 2]);
-    let rotate1 = arr2(&[[0, -1], [1, 0]]);
+        println!("coord\n{}", coord);
+        println!("rotate\n{}", rotate1);
 
-    println!("coord\n{}", coord);
-    println!("rotate\n{}", rotate1);
+        let res = &rotate1.dot(&coord);
+        println!("rotated\n{}", res);
 
-    let res = &rotate1.dot(&coord);
-    println!("rotated\n{}", res);
+        let dim = 3;
 
-    let dim = 3;
-
-    let tile = Tile {
-        id: Id(1234),
-        dim,
-        image: arr2(&[['1', '2', '3'], ['4', '5', '6'], ['7', '8', '9']]),
-    };
-    for r in Rotation::all() {
-        println!("Rotate {:?} =>\n{}", r, tile.rotated(*r));
+        let tile = Tile {
+            id: Id(1234),
+            dim,
+            image: arr2(&[['1', '2', '3'], ['4', '5', '6'], ['7', '8', '9']]),
+        };
+        for r in Rotation::all() {
+            println!("Rotate {:?} =>\n{}", r, tile.rotated(*r));
+        }
     }
 
-    let tiles = parse_tiles("day20/input.txt", 10)?;
+    // ----------------
+    // Part 1
+    //
+
+    let dim = 10;
+    let tiles = parse_tiles("day20/input.txt", dim)?;
     for t in &tiles {
         println!("id {:?}\n{}", t.id, &t);
     }
@@ -423,14 +470,149 @@ fn main() -> Result<()> {
     assert!(tile_map.tiles.values().all(|tr| tr.rotated.is_some()));
 
     // find the 4 corners
-    let corners:Vec<_> = tile_map.tiles.values().filter(|&tr| tr.neighbours.len() == 2).collect();
+    let corners: Vec<_> = tile_map
+        .tiles
+        .values()
+        .filter(|&tr| tr.neighbours.len() == 2)
+        .collect();
     for tr in corners.iter() {
         println!("{} has {:?}", tr.tile.id, tr.neighbours);
     }
-    let product:i64 = corners.iter().map(|tr| tr.tile.id.0 as i64).product();
+    let product: i64 = corners.iter().map(|tr| tr.tile.id.0 as i64).product();
     println!("product: {}", product);
 
+    // ----------------
+    // Part 1 - arrange the tiles
+    //
 
+    // get top row of tiles, then create a big tile with rendered contents
+    let top_row = {
+        let mut top_row = Vec::new();
+        let top_left = tile_map
+            .tiles
+            .iter()
+            .find(|(_, tr)| {
+                !tr.neighbours.contains_key(&Edge::Left) && !tr.neighbours.contains_key(&Edge::Top)
+            })
+            .unwrap();
+        let mut current = top_left.1;
+        top_row.push(current);
+        while let Some(next) = current.neighbours.get(&Edge::Right) {
+            current = tile_map.get_relation(next).unwrap();
+            top_row.push(current);
+        }
+        top_row
+    };
+    println!("{:?}", top_row);
+
+    // ----------------
+    // Part 2 - find the seamonster
+    //
+
+    // copy little tiles into one large tile
+    let rendered_dim = dim as usize - 2;
+    let dest_dim = rendered_dim * top_row.len();
+    let mut big_tile = Tile {
+        dim: dest_dim as i32,
+        id: Id(0),
+        image: Array::from_elem((dest_dim, dest_dim), 'X'),
+    };
+    let mut row = top_row;
+    let mut row_number = 0;
+    loop {
+        // copy into the big tile
+        for (col_number, tr) in row.iter().enumerate() {
+            let rendered = tr.rotated.as_ref().unwrap().render_borderless_tile();
+            let r0 = row_number * rendered_dim;
+            let r1 = r0 + rendered_dim;
+            let c0 = col_number * rendered_dim;
+            let c1 = c0 + rendered_dim;
+            let mut slice = big_tile.image.slice_mut(s![r0..r1, c0..c1]);
+            slice.assign(&rendered.image);
+        }
+        // and get next row (until none are left)
+        let next_row: Option<Vec<&TileRelation>> = row
+            .iter()
+            .map(|tr| {
+                let x = tr
+                    .neighbours
+                    .get(&Edge::Bottom)
+                    .map(|id| tile_map.get_relation(id).unwrap());
+                x
+            })
+            .collect();
+        if let Some(next_row) = next_row {
+            row = next_row;
+            row_number += 1;
+        } else {
+            break;
+        }
+    }
+    println!("Big tile\n{}", big_tile.rotated(Rotation::F0));
+
+    // construct our seamonster
+    let seamonster = {
+        let seamonster_data = [
+            "                  # ",
+            "#    ##    ##    ###",
+            " #  #  #  #  #  #   ",
+        ];
+        let cols = seamonster_data.first().unwrap().len();
+        let rows = seamonster_data.len();
+        let char_vec: Vec<_> = seamonster_data.iter().flat_map(|&l| l.chars()).collect();
+        Array::from_shape_vec((rows, cols), char_vec)?
+    };
+    println!("{:?}", seamonster);
+
+    // find the seamonster (kind of like convolution) -- try all rotations until
+    // we find some :)
+    // array.windows would have been perfect if there was a mutable version, but sadly no.
+    for rot in Rotation::all() {
+        let search_tile = big_tile.rotated(*rot).render_tile();
+        let mut destination_tile = search_tile.clone();
+        let mut seamonster_count = 0;
+        for r_start in 0..=(dest_dim - seamonster.dim().0) {
+            for c_start in 0..=(dest_dim - seamonster.dim().1) {
+                let window = s![
+                    r_start..(r_start + seamonster.dim().0),
+                    c_start..(c_start + seamonster.dim().1)
+                ];
+                let src = search_tile.image.slice(&window);
+                let mut dst = destination_tile.image.slice_mut(&window);
+                let mut found_seamonster = true;
+                azip!((&m in &seamonster, &s in &src) {
+                    // and detect if any part of the seamonster is missing
+                    if m=='#' && s!='#' {
+                        found_seamonster = false;
+                    }
+                });
+                if found_seamonster {
+                    seamonster_count += 1;
+                    // set destination seamonster elements to 'O'
+                    azip!((&m in &seamonster, d in &mut dst) {
+                        if m == '#' {
+                            *d = 'O'
+                        }
+                    })
+                }
+            }
+        }
+
+        // found 'em
+        if seamonster_count > 0 {
+            let sea_roughness = destination_tile
+                .image
+                .iter()
+                .filter(|&ch| *ch == '#')
+                .count();
+
+            println!(
+                "Found {} seamonsters; roughness is {}; result is\n{}",
+                seamonster_count, sea_roughness, destination_tile
+            );
+            break;
+        }
+    }
 
     Ok(())
 }
