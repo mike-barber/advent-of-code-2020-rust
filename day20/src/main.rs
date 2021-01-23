@@ -8,7 +8,11 @@ use ndarray::{arr1, arr2, Array, Array2, ShapeBuilder};
 
 #[derive(Debug, Clone, Copy, Eq, PartialEq)]
 struct Coord(i32, i32);
-
+impl Coord {
+    fn rotate(&self, r: &Rotation, dim:i32) -> Self {
+        r.apply(&self, dim)
+    }
+}
 impl Display for Coord {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "({},{})", self.0, self.1)
@@ -27,49 +31,48 @@ impl AddAssign for Coord {
     }
 }
 
+// rotate and/or flip 
 #[derive(Debug, Copy, Clone, Eq, PartialEq)]
 enum Rotation {
     R0,
     R90,
     R180,
     R270,
+    F0,
+    F90,
+    F180,
+    F270
 }
 impl Rotation {
-    fn ident(c: &Coord, _dim: i32) -> Coord {
-        Coord(c.0, c.1)
-    }
+    // 90 degree rotation
     fn cw90(c: &Coord, dim: i32) -> Coord {
         Coord(dim - 1 - c.1, c.0)
     }
-    // TODO: direct matrices instead of nested calls
-    fn cw180(c: &Coord, dim: i32) -> Coord {
-        Self::cw90(&Self::cw90(&c, dim), dim)
-    }
-    fn cw270(c: &Coord, dim: i32) -> Coord {
-        Self::cw90(&Self::cw90(&Self::cw90(&c, dim), dim), dim)
+    // vertical flip (rows)
+    fn flip(c: &Coord, dim:i32) -> Coord {
+        Coord(dim - 1 - c.0, c.1)
     }
 
-    fn get_function(&self) -> fn(&Coord, i32) -> Coord {
+    fn apply(&self, c:&Coord, dim:i32) -> Coord {
+        let r = |c| Self::cw90(c, dim);
+        let f=|c| Self::flip(c,dim);
         match self {
-            Rotation::R0 => Self::ident,
-            Rotation::R90 => Self::cw90,
-            Rotation::R180 => Self::cw180,
-            Rotation::R270 => Self::cw270,
+            // rotate only
+            Rotation::R0 => *c,
+            Rotation::R90 => r(c),
+            Rotation::R180 => r(&r(c)),
+            Rotation::R270 => r(&r(&r(c))),
+            // flip and rotate
+            Rotation::F0 => f(c),
+            Rotation::F90 => f(&r(c)),
+            Rotation::F180 => f(&r(&r(c))),
+            Rotation::F270 => f(&r(&r(&r(c))))
         }
     }
 
-    // get next rotation, but stop after 270 degrees
-    // fn next_stop(&self) -> Option<Rotation> {
-    //     match self {
-    //         Rotation::R0 => Some(Rotation::R90),
-    //         Rotation::R90 => Some(Rotation::R180),
-    //         Rotation::R180 => Some(Rotation::R270),
-    //         Rotation::R270 => None,
-    //     }
-    // }
     fn all() -> &'static [Rotation] {
         use Rotation::*;
-        &[R0, R90, R180, R270]
+        &[R0, R90, R180, R270, F0, F90, F180, F270]
     }
 }
 
@@ -158,7 +161,7 @@ struct RotatedTile<'a> {
 
 impl<'a> RotatedTile<'a> {
     fn get(&self, c: &Coord) -> Option<char> {
-        let c = self.rotation.get_function()(&c, self.tile.dim);
+        let c = self.rotation.apply(c, self.tile.dim);
         self.tile.get(&c)
     }
 
@@ -235,7 +238,7 @@ struct FoundRelation {
 impl<'a> TileMap<'a> {
     fn create(tiles: &'a [Tile]) -> Self {
         let mut tile_map = HashMap::new();
-        for (i, t) in tiles.iter().enumerate() {
+        for t in tiles.iter() {
             let relation = TileRelation {
                 tile: t,
                 rotated: None,
@@ -399,37 +402,15 @@ fn main() -> Result<()> {
     println!("rotated\n{}", res);
 
     let dim = 3;
-    let c = Coord(1, 2);
-
-    let f0 = Rotation::R0.get_function();
-    let f1 = Rotation::R90.get_function();
-    let f2 = Rotation::R180.get_function();
-    let f3 = Rotation::R270.get_function();
-
-    let c0 = f0(&c, dim);
-    let c1 = f1(&c, dim);
-    let c2 = f2(&c, dim);
-    let c3 = f3(&c, dim);
-
-    println!("{}", c0);
-    println!("{}", c1);
-    println!("{}", c2);
-    println!("{}", c3);
 
     let tile = Tile {
         id: Id(1234),
-        dim: 3,
+        dim,
         image: arr2(&[['1', '2', '3'], ['4', '5', '6'], ['7', '8', '9']]),
     };
-    let t0 = tile.rotated(Rotation::R0);
-    let t1 = tile.rotated(Rotation::R90);
-    let t2 = tile.rotated(Rotation::R180);
-    let t3 = tile.rotated(Rotation::R270);
-
-    println!("{}", &t0);
-    println!("{}", &t1);
-    println!("{}", &t2);
-    println!("{}", &t3);
+    for r in Rotation::all() {
+        println!("Rotate {:?} =>\n{}", r, tile.rotated(*r));
+    }
 
     let tiles = parse_tiles("day20/example-input.txt", 10)?;
     for t in &tiles {
@@ -438,6 +419,19 @@ fn main() -> Result<()> {
 
     let mut tile_map = TileMap::create(&tiles);
     tile_map.solve();
+
+    // check all are oriented
+    assert!(tile_map.tiles.values().all(|tr| tr.rotated.is_some()));
+
+    // find the 4 corners
+    let corners:Vec<_> = tile_map.tiles.values().filter(|&tr| tr.neighbours.len() == 2).collect();
+    for tr in corners.iter() {
+        println!("{} has {:?}", tr.tile.id, tr.neighbours);
+    }
+    let product:i64 = corners.iter().map(|tr| tr.tile.id.0 as i64).product();
+    println!("product: {}", product);
+
+
 
     Ok(())
 }
