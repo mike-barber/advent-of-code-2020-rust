@@ -1,7 +1,4 @@
-use std::{
-    fmt::Display,
-    ops::{Add, AddAssign},
-};
+use std::{collections::HashMap, fmt::Display, ops::{Add, AddAssign}};
 
 use eyre::{eyre, Result, WrapErr};
 use ndarray::{arr1, arr2, Array, Array2, ShapeBuilder};
@@ -71,10 +68,14 @@ impl Rotation {
     }
 }
 
+#[derive(Debug,Clone,Copy,Eq,PartialEq)]
+struct Id(i32);
+
+#[derive(Debug)]
 struct Tile {
     image: Array2<char>,
     dim: i32,
-    id: i32,
+    id: Id,
 }
 
 impl Tile {
@@ -116,6 +117,17 @@ enum Edge {
     Bottom,
     Left,
     Right,
+}
+impl Edge {
+    fn adjacent(&self) -> Self {
+        use Edge::*;
+        match self {
+            Top => Bottom,
+            Bottom => Top,
+            Left => Right,
+            Right => Left
+        }
+    }
 }
 
 struct RotatedTile<'a> {
@@ -168,6 +180,16 @@ impl<'a> Display for RotatedTile<'a> {
     }
 }
 
+struct TileMap<'a> {
+    tiles: HashMap<i32, TileRelation<'a>>
+}
+
+struct TileRelation<'a> {
+    tile: &'a Tile,
+    rotated: Option<RotatedTile<'a>>,
+    neighbours: HashMap<Edge, Option<i32>> 
+}
+
 // quick n dirty
 fn parse_tiles(path: &str, dim: i32) -> Result<Vec<Tile>> {
     let mut tiles = Vec::new();
@@ -190,7 +212,7 @@ fn parse_tiles(path: &str, dim: i32) -> Result<Vec<Tile>> {
             }
         }
 
-        let tile = Tile { image, id, dim };
+        let tile = Tile { image, id: Id(id), dim };
         tiles.push(tile);
     }
 
@@ -232,7 +254,7 @@ fn main() -> Result<()> {
     println!("{}", c3);
 
     let tile = Tile {
-        id: 1234,
+        id: Id(1234),
         dim: 3,
         image: arr2(&[['1', '2', '3'], ['4', '5', '6'], ['7', '8', '9']]),
     };
@@ -248,7 +270,7 @@ fn main() -> Result<()> {
 
     let tiles = parse_tiles("day20/example-input.txt", 10)?;
     for t in tiles {
-        println!("id {}\n{}", t.id, &t);
+        println!("id {:?}\n{}", t.id, &t);
     }
 
     Ok(())
@@ -264,7 +286,7 @@ mod tests {
     //  789
     fn create_tile() -> Tile {
         Tile {
-            id: 1234,
+            id: Id(1234),
             dim: 3,
             image: arr2(&[['1', '2', '3'], ['4', '5', '6'], ['7', '8', '9']]),
         }
