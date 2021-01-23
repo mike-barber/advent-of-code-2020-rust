@@ -149,6 +149,7 @@ impl Edge {
     }
 }
 
+#[derive(Debug)]
 struct RotatedTile<'a> {
     tile: &'a Tile,
     rotation: Rotation,
@@ -199,11 +200,13 @@ impl<'a> Display for RotatedTile<'a> {
     }
 }
 
+#[derive(Debug)]
 struct TileMap<'a> {
     tiles: HashMap<Id, TileRelation<'a>>,
     all_ids: Vec<Id>,
 }
 
+#[derive(Debug)]
 struct TileRelation<'a> {
     tile: &'a Tile,
     rotated: Option<RotatedTile<'a>>,
@@ -223,11 +226,7 @@ impl<'a> TileMap<'a> {
         for (i, t) in tiles.iter().enumerate() {
             let relation = TileRelation {
                 tile: t,
-                // lock in rotation of 0 for first tile -- have to start somewhere
-                rotated: match i {
-                    0 => Some(t.rotated(Rotation::R0)),
-                    _ => None,
-                },
+                rotated: None,
                 neighbours: HashMap::new(),
             };
             tile_map.insert(t.id, relation);
@@ -305,29 +304,50 @@ impl<'a> TileMap<'a> {
         None
     }
 
-    fn solve(&mut self, start_id: Id) {
+    fn solve(&mut self) {
         let all_ids = self.all_ids.clone();
         
-        loop {
-            if let Some(new_relation) = self.solve_one(&all_ids, start_id) {
-                println!("new relation: {:?}", new_relation);
-                let this_id = start_id; // TODO! 
+        // lock rotation of first tile (need to start somewhere)
+        {
+            let t = self.tiles.get_mut(&all_ids[0]).unwrap();
+            t.rotated = Some(t.tile.rotated(Rotation::R0));
+        }
 
-                // this -> other
-                let this_rel = self.tiles.get_mut(&this_id).unwrap();
-                this_rel.neighbours.insert(new_relation.ref_edge, new_relation.other_id);
-                
-                // other -> this (and set rotation if found)
-                let other_rel = self.tiles.get_mut(&new_relation.other_id).unwrap();
-                other_rel.neighbours.insert(new_relation.ref_edge.adjacent(), this_id);
-                if let Some(new_rotation) = new_relation.other_new_rotation {
-                    other_rel.rotated = Some(other_rel.tile.rotated(new_rotation))
+        loop {
+            let mut changed = false;
+            for this_id in all_ids.iter() {
+                // skip this if the rotation is not set yet
+                if self.tiles.get(this_id).unwrap().rotated.is_none() {
+                    println!("Skipping {} as rotation not set", this_id);
+                    continue;
                 }
-            } else {
-                println!("done(interim)");
+                // otherwise find a new relationship and record it
+                if let Some(new_relation) = self.solve_one(&all_ids, *this_id) {
+                    println!("new relation: {} => {:?}", this_id, new_relation);
+    
+                    // this -> other
+                    let this_rel = self.tiles.get_mut(&this_id).unwrap();
+                    this_rel.neighbours.insert(new_relation.ref_edge, new_relation.other_id);
+                    
+                    // other -> this (and set rotation if found)
+                    let other_rel = self.tiles.get_mut(&new_relation.other_id).unwrap();
+                    other_rel.neighbours.insert(new_relation.ref_edge.adjacent(), *this_id);
+                    if let Some(new_rotation) = new_relation.other_new_rotation {
+                        other_rel.rotated = Some(other_rel.tile.rotated(new_rotation))
+                    }
+
+                    // record change occurred 
+                    changed = true;
+                }
+            }
+            // converged
+            if !changed {
                 break;
             }
         }
+
+        // found 
+        println!("{:?}", &self);
     }
 }
 
@@ -419,7 +439,7 @@ fn main() -> Result<()> {
     }
 
     let mut tile_map = TileMap::create(&tiles);
-    tile_map.solve(tiles[0].id);
+    tile_map.solve();
 
     Ok(())
 }
