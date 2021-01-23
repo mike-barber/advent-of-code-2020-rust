@@ -4,7 +4,7 @@ use std::{
 };
 
 use eyre::{eyre, Result, WrapErr};
-use ndarray::{arr1, arr2, array, Array1, Array2};
+use ndarray::{arr1, arr2, Array, Array2, ShapeBuilder};
 
 //type Image = Array2::<char>;
 //type Coord = Array1::<i32>;
@@ -74,6 +74,7 @@ impl Rotation {
 struct Tile {
     image: Array2<char>,
     dim: i32,
+    id: i32,
 }
 
 impl Tile {
@@ -81,11 +82,16 @@ impl Tile {
         self.image.get((c.0 as usize, c.1 as usize)).map(|ch| *ch)
     }
 
-    fn rotated(&self, rotation:Rotation) -> RotatedTile {
+    fn rotated(&self, rotation: Rotation) -> RotatedTile {
         RotatedTile {
-            tile: self, 
-            rotation
+            tile: self,
+            rotation,
         }
+    }
+}
+impl Display for Tile {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        self.rotated(Rotation::R0).fmt(f)
     }
 }
 
@@ -123,14 +129,14 @@ impl<'a> RotatedTile<'a> {
         self.tile.get(&c)
     }
 
-    fn row_iter(&self, row:i32) -> TileIterator {
+    fn row_iter(&self, row: i32) -> TileIterator {
         TileIterator {
             tile: self,
             current: Coord(row, 0),
             inc: Coord(0, 1),
         }
     }
-    fn col_iter(&self, col:i32) -> TileIterator {
+    fn col_iter(&self, col: i32) -> TileIterator {
         TileIterator {
             tile: self,
             current: Coord(0, col),
@@ -143,8 +149,8 @@ impl<'a> RotatedTile<'a> {
         match edge {
             Edge::Top => self.row_iter(0),
             Edge::Bottom => self.row_iter(far_index),
-            Edge::Left => self.col_iter(0), 
-            Edge::Right => self.col_iter(far_index)
+            Edge::Left => self.col_iter(0),
+            Edge::Right => self.col_iter(far_index),
         }
     }
 }
@@ -152,21 +158,49 @@ impl<'a> RotatedTile<'a> {
 impl<'a> Display for RotatedTile<'a> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         for r in 0..self.tile.dim {
-            writeln!(f)?;
             for c in 0..self.tile.dim {
                 let ch = self.get(&Coord(r, c)).ok_or_else(|| std::fmt::Error)?;
                 write!(f, "{}", ch)?;
             }
+            writeln!(f)?;
         }
         Ok(())
     }
+}
+
+// quick n dirty
+fn parse_tiles(path: &str, dim: i32) -> Result<Vec<Tile>> {
+    let mut tiles = Vec::new();
+    let contents = std::fs::read_to_string(path)?;
+    let mut lines = contents.lines();
+
+    while let Some(line) = lines.next() {
+        let mut l = line;
+        if l.is_empty() {
+            l = lines.next().unwrap();
+        }
+
+        let id: i32 = l.replace("Tile ", "").replace(":", "").parse()?;
+        let mut image: Array2<char> = Array::from_elem((dim as usize, dim as usize), 'X');
+        for r in 0..dim {
+            let row_str = lines.next().ok_or_else(|| eyre!("expected tile row"))?;
+            for (c, ch) in row_str.chars().enumerate() {
+                let elem = image.get_mut((r as usize, c)).ok_or(eyre!("dim error"))?;
+                *elem = ch;
+            }
+        }
+
+        let tile = Tile { image, id, dim };
+        tiles.push(tile);
+    }
+
+    Ok(tiles)
 }
 
 /// notes
 /// consider
 ///  - https://docs.rs/eyre/0.6.5/eyre/ for fun, instead of related `anyhow`
 ///  - https://docs.rs/ndarray/0.14.0/ndarray/type.Array.html (used before)
-///  - https://crates.io/crates/transpose (something to try, maybe a lighter option)
 fn main() -> Result<()> {
     println!("Hello, world!");
 
@@ -198,6 +232,7 @@ fn main() -> Result<()> {
     println!("{}", c3);
 
     let tile = Tile {
+        id: 1234,
         dim: 3,
         image: arr2(&[['1', '2', '3'], ['4', '5', '6'], ['7', '8', '9']]),
     };
@@ -205,19 +240,21 @@ fn main() -> Result<()> {
     let t1 = tile.rotated(Rotation::R90);
     let t2 = tile.rotated(Rotation::R180);
     let t3 = tile.rotated(Rotation::R270);
-    
+
     println!("{}", &t0);
     println!("{}", &t1);
     println!("{}", &t2);
     println!("{}", &t3);
 
-
-
+    let tiles = parse_tiles("day20/example-input.txt", 10)?;
+    for t in tiles {
+        println!("id {}\n{}", t.id, &t);
+    }
 
     Ok(())
 }
 
-#[cfg(test)] 
+#[cfg(test)]
 mod tests {
     use super::*;
 
@@ -227,6 +264,7 @@ mod tests {
     //  789
     fn create_tile() -> Tile {
         Tile {
+            id: 1234,
             dim: 3,
             image: arr2(&[['1', '2', '3'], ['4', '5', '6'], ['7', '8', '9']]),
         }
