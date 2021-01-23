@@ -1,10 +1,4 @@
-use std::{
-    collections::HashMap,
-    fmt::Display,
-    hash::Hash,
-    ops::{Add, AddAssign},
-    println,
-};
+use std::{collections::HashMap, fmt::Display, hash::Hash, ops::{Add, AddAssign}, println, writeln};
 
 use eyre::{eyre, Result, WrapErr};
 use ndarray::{arr1, arr2, Array, Array2, ShapeBuilder};
@@ -87,13 +81,12 @@ impl Display for Id {
     }
 }
 
-#[derive(Debug)]
+
 struct Tile {
     image: Array2<char>,
     dim: i32,
     id: Id,
 }
-
 impl Tile {
     fn get(&self, c: &Coord) -> Option<char> {
         self.image.get((c.0 as usize, c.1 as usize)).map(|ch| *ch)
@@ -109,6 +102,15 @@ impl Tile {
 impl Display for Tile {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         self.rotated(Rotation::R0).fmt(f)
+    }
+}
+impl std::fmt::Debug for Tile {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        writeln!(f)?;
+        writeln!(f, "Tile-----------------------")?;
+        Display::fmt(&self, f)?;
+        writeln!(f, "---------------------------")?;
+        Ok(())
     }
 }
 
@@ -149,7 +151,6 @@ impl Edge {
     }
 }
 
-#[derive(Debug)]
 struct RotatedTile<'a> {
     tile: &'a Tile,
     rotation: Rotation,
@@ -199,6 +200,17 @@ impl<'a> Display for RotatedTile<'a> {
         Ok(())
     }
 }
+// debug == display; too verbose otherwise
+impl<'a> std::fmt::Debug for RotatedTile<'a> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        writeln!(f)?;
+        writeln!(f, "RotatedTile----------------")?;
+        writeln!(f, "{:?}", self.rotation)?;
+        Display::fmt(&self, f)?;
+        writeln!(f, "---------------------------")?;
+        Ok(())
+    }
+}
 
 #[derive(Debug)]
 struct TileMap<'a> {
@@ -242,58 +254,44 @@ impl<'a> TileMap<'a> {
     fn solve_one(&self, all_ids: &[Id], reference_id: Id) -> Option<FoundRelation> {
         let ref_relation = self.tiles.get(&reference_id).unwrap();
         let ref_rotated = ref_relation.rotated.as_ref().unwrap();
-        for edge in Edge::all() {
+        for this_edge in Edge::all() {
             // already have a relationship; skip
-            if ref_relation.neighbours.contains_key(edge) {
+            if ref_relation.neighbours.contains_key(this_edge) {
                 continue;
             }
             // find a new relationship
-            for id in all_ids {
-                if *id == reference_id {
+            for other_id in all_ids {
+                if *other_id == reference_id {
                     continue; // skip self
                 }
-                let other_rel = self.tiles.get(id).unwrap();
-                if let Some(rotated) = &other_rel.rotated {
+                let other_rel = self.tiles.get(other_id).unwrap();
+                if let Some(other_rotated) = &other_rel.rotated {
                     // already rotated -- just check and associate if found
-                    let adjacent_edge = edge.adjacent();
+                    let adjacent_edge = this_edge.adjacent();
                     if !other_rel.neighbours.contains_key(&adjacent_edge)
                         && itertools::equal(
-                            ref_rotated.edge_iter(*edge),
-                            rotated.edge_iter(adjacent_edge),
+                            ref_rotated.edge_iter(*this_edge),
+                            other_rotated.edge_iter(adjacent_edge),
                         )
                     {
                         return Some(FoundRelation {
                             other_id: other_rel.tile.id,
-                            ref_edge: *edge,
+                            ref_edge: *this_edge,
                             other_new_rotation: None,
                         });
                     }
                 } else {
                     // not rotated -- find a rotation
-                    let adjacent_edge = edge.adjacent();
+                    let adjacent_edge = this_edge.adjacent();
                     for rotation in Rotation::all() {
-                        let rotated = other_rel.tile.rotated(*rotation);
+                        let other_rotated = other_rel.tile.rotated(*rotation);
                         if itertools::equal(
-                            ref_rotated.edge_iter(*edge),
-                            rotated.edge_iter(adjacent_edge),
+                            ref_rotated.edge_iter(*this_edge),
+                            other_rotated.edge_iter(adjacent_edge),
                         ) {
-                            // {
-                            //     let vec_ref_edge: String = ref_rotated.edge_iter(*edge).collect();
-                            //     let vec_other_edge: String =
-                            //         rotated.edge_iter(adjacent_edge).collect();
-                            //     println!(
-                            //         "{} -> {} edges {:?}{:?} == {:?}{:?}",
-                            //         reference_id,
-                            //         id,
-                            //         edge,
-                            //         vec_ref_edge,
-                            //         adjacent_edge,
-                            //         vec_other_edge
-                            //     );
-                            // }
                             return Some(FoundRelation {
                                 other_id: other_rel.tile.id,
-                                ref_edge: *edge,
+                                ref_edge: *this_edge,
                                 other_new_rotation: Some(*rotation),
                             });
                         }
