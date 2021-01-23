@@ -5,12 +5,21 @@ use std::{
     ops::{Add, AddAssign},
     println, writeln,
 };
-
 use eyre::{eyre, Result};
 use ndarray::{arr1, arr2, azip, s, Array, Array2};
 
-//type Image = Array2::<char>;
-//type Coord = Array1::<i32>;
+// Note -- could simplify this quite a bit. 
+// Didn't realise how easy the second part of the problem
+// would be, so the zero-allocation rotations stuff is
+// a bit of an overkill. Could just create a physically
+// rotated new image each time, and use the built-in
+// ndarray functions more for slices, etc.
+//
+// Also could use a hashmap<Edge=>Id> instead and match 
+// up all the edges like this first, before doing 
+// any rotations. 
+//
+// Enough time spent on the problem. Works. Moving on... 
 
 #[derive(Debug, Clone, Copy, Eq, PartialEq)]
 struct Coord(i32, i32);
