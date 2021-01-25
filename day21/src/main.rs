@@ -31,8 +31,11 @@ fn read_foods(path: &str) -> Result<Vec<Food>> {
 }
 
 fn main() -> Result<()> {
-    let foods = read_foods("day21/input.txt")?;
+    let foods = read_foods("day21/example-input.txt")?;
     println!("{:?}", foods);
+
+    // -----------------------------
+    // Part 1 -- find inert ingredients
 
     let all_allergens: HashSet<_> = foods.iter().flat_map(|f| f.allergens.iter()).collect();
     let all_ingredients: HashSet<_> = foods.iter().flat_map(|f| f.ingredients.iter()).collect();
@@ -64,6 +67,29 @@ fn main() -> Result<()> {
         acc + count
     });
     println!("Safe ingredients occur a total of {} times", safe_ingredients_count);
+
+    // -----------------------------
+    // Part 2 -- find which ingredients map to which allergens
+
+    let mut possible_reduction = possible_causes.clone();
+    loop {
+        let unique_causes:Vec<_> = possible_reduction.iter().filter_map(|(allergen, ingredients)| {
+            match ingredients.len() {
+                1 => Some((allergen, ingredients.iter().nth(0).unwrap())),
+                _ => None
+            }
+        }).collect();
+
+        // remove each of these ingredients from the list of other possible causes of allergens
+        for (unique_allergen, unique_ingredient) in unique_causes.iter() {
+            for (allergen, ingredients) in possible_reduction.iter_mut() {
+                if allergen != *unique_allergen {
+                    ingredients.remove(*unique_ingredient);
+                }
+            }
+        }
+    }
+
 
     Ok(())
 }
