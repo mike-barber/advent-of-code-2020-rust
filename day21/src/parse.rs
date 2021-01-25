@@ -1,4 +1,11 @@
-use nom::{IResult, branch::*, bytes::complete::tag, character::complete::*, combinator::{all_consuming, map, recognize}, multi::*, sequence::*};
+use nom::{
+    bytes::complete::tag,
+    character::complete::*,
+    combinator::{all_consuming, map, recognize},
+    multi::*,
+    sequence::*,
+    IResult,
+};
 
 // mxmxvkd kfcds sqjhc nhms (contains dairy, fish)
 
@@ -17,8 +24,8 @@ fn parse_allergens(i: &str) -> IResult<&str, Vec<&str>> {
 }
 
 pub fn parse_food(i: &str) -> IResult<&str, (Vec<&str>, Vec<&str>)> {
-    map(all_consuming(
-        tuple((
+    map(
+        all_consuming(tuple((
             parse_ingredients,
             tag("(contains"),
             parse_allergens,

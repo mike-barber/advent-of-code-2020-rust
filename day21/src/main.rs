@@ -31,7 +31,7 @@ fn read_foods(path: &str) -> Result<Vec<Food>> {
 }
 
 fn main() -> Result<()> {
-    let foods = read_foods("day21/example-input.txt")?;
+    let foods = read_foods("day21/input.txt")?;
     println!("{:?}", foods);
 
     // -----------------------------
@@ -62,34 +62,59 @@ fn main() -> Result<()> {
         .collect();
 
     println!("Safe ingredients: {:?}", safe_ingredients);
-    let safe_ingredients_count = safe_ingredients.iter().fold(0, |acc,&&i| {
+    let safe_ingredients_count = safe_ingredients.iter().fold(0, |acc, &&i| {
         let count = foods.iter().filter(|&f| f.ingredients.contains(i)).count();
         acc + count
     });
-    println!("Safe ingredients occur a total of {} times", safe_ingredients_count);
+    println!(
+        "Safe ingredients occur a total of {} times",
+        safe_ingredients_count
+    );
 
     // -----------------------------
     // Part 2 -- find which ingredients map to which allergens
 
     let mut possible_reduction = possible_causes.clone();
     loop {
-        let unique_causes:Vec<_> = possible_reduction.iter().filter_map(|(allergen, ingredients)| {
-            match ingredients.len() {
-                1 => Some((allergen, ingredients.iter().nth(0).unwrap())),
-                _ => None
-            }
-        }).collect();
+        // create list of known unique causes (cloning them to avoid mutability collisions)
+        let unique_causes: Vec<_> = possible_reduction
+            .iter()
+            .filter_map(|(&allergen, ingredients)| match ingredients.len() {
+                1 => Some((allergen.clone(), ingredients.iter().next().unwrap().clone())),
+                _ => None,
+            })
+            .collect();
 
         // remove each of these ingredients from the list of other possible causes of allergens
         for (unique_allergen, unique_ingredient) in unique_causes.iter() {
-            for (allergen, ingredients) in possible_reduction.iter_mut() {
-                if allergen != *unique_allergen {
-                    ingredients.remove(*unique_ingredient);
+            for (&allergen, ingredients) in possible_reduction.iter_mut() {
+                if allergen != unique_allergen {
+                    ingredients.remove(unique_ingredient);
                 }
             }
         }
+
+        // stop when all allergens have a unique cause
+        if possible_reduction
+            .iter()
+            .all(|(_, ingredients)| ingredients.len() == 1)
+        {
+            break;
+        }
     }
 
+    // collect and sort by allergen
+    let mut causes: Vec<_> = possible_reduction
+        .iter()
+        .map(|(&allergen, ingredients)| (allergen.clone(), ingredients.iter().next().unwrap()))
+        .collect();
+    causes.sort_by(|(a, _), (b, _)| a.partial_cmp(b).unwrap());
+
+    println!("Unique causes: {:?}", causes);
+
+    // and present as a canonical list of allergens
+    let canonical = itertools::join(causes.iter().map(|(_, ingred)| ingred), ",");
+    println!("Canonical result:\n{}", canonical);
 
     Ok(())
 }
