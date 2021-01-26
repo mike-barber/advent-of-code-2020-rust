@@ -30,7 +30,7 @@ pub mod parser {
     }
 
     pub fn parse_input(i: &str) -> eyre::Result<Game> {
-        if let Ok((_rem, mut res)) = all_consuming(separated_list1(multispace1, parse_deck))(i) {
+        if let Ok((_rem, mut res)) = separated_list1(multispace1, parse_deck)(i) {
             let d2 = res.pop().ok_or(eyre!("missing deck 2"))?;
             let d1 = res.pop().ok_or(eyre!("missing deck 1"))?;
             Ok(Game{
@@ -49,17 +49,59 @@ pub struct Deck {
     cards: VecDeque<i32>,
 }
 
+impl Deck {
+    fn score(&self) -> i32 {
+        self.cards.iter().rev().enumerate().map(|(i,c)| {
+            let value = i as i32 + 1;
+            value * c
+        }).sum()
+    }
+}
+
+
 #[derive(Debug, Clone)]
 pub struct Game {
     player1: Deck,
     player2: Deck
 }
 
-fn main() -> Result<()> {
-    let input = std::fs::read_to_string("day22/example-input.txt")?;
+impl Game {
+    fn next_round(&mut self) {
+        if self.is_complete() {
+            return;
+        }
 
-    let game = parser::parse_input(&input)?;
+        let c1 = self.player1.cards.pop_front().unwrap();
+        let c2 = self.player2.cards.pop_front().unwrap();
+        if c1 > c2 {
+            self.player1.cards.push_back(c1);
+            self.player1.cards.push_back(c2);
+        } else if c2 > c1 {
+            self.player2.cards.push_back(c2);
+            self.player2.cards.push_back(c1);
+        } else {
+            panic!("repeated cards")
+        }
+    }
+
+    fn is_complete(&self) -> bool {
+        self.player1.cards.is_empty() || self.player2.cards.is_empty()
+    }
+}
+
+fn main() -> Result<()> {
+    let input = std::fs::read_to_string("day22/input.txt")?;
+
+    let mut game = parser::parse_input(&input)?;
     println!("game: {:?}", game);
+
+    while !game.is_complete() {
+        game.next_round();
+        println!("game: {:?}", game);
+    }
+
+    println!("Player 1 score: {}", game.player1.score());
+    println!("Player 2 score: {}", game.player2.score());
 
     Ok(())
 }
