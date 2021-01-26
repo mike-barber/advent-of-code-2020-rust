@@ -14,14 +14,18 @@ impl SimpleGame {
 
         let c1 = self.player1.cards.pop_front().unwrap();
         let c2 = self.player2.cards.pop_front().unwrap();
-        if c1 > c2 {
-            self.player1.cards.push_back(c1);
-            self.player1.cards.push_back(c2);
-        } else if c2 > c1 {
-            self.player2.cards.push_back(c2);
-            self.player2.cards.push_back(c1);
-        } else {
-            panic!("repeated cards")
+        match c1.cmp(&c2) {
+            std::cmp::Ordering::Greater => {
+                self.player1.cards.push_back(c1);
+                self.player1.cards.push_back(c2);
+            },
+            std::cmp::Ordering::Less => {
+                self.player2.cards.push_back(c2);
+                self.player2.cards.push_back(c1);
+            },
+            std::cmp::Ordering::Equal => {
+                panic!("repeated cards")
+            }
         }
     }
 

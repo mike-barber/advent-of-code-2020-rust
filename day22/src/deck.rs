@@ -1,6 +1,5 @@
 use std::collections::VecDeque;
 
-
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Deck {
     pub player: i32,
