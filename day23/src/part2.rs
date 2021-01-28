@@ -86,8 +86,6 @@ impl CircularVec {
 
 #[cfg(test)]
 mod tests {
-    use itertools::assert_equal;
-
     use super::{CircularVec, FoundPos};
 
     fn create() -> CircularVec {
@@ -108,7 +106,7 @@ mod tests {
 
     #[test]
     fn moves_left_correct() {
-        // starting from position [4] == 9
+        // starting from position [4] == 9(,1,3)
         let from_pos = 4;
         let cases = [
             (7, vec![7, 9, 1, 3, 2, 5, 8, 4, 6]),
@@ -124,6 +122,30 @@ mod tests {
 
             // act
             let buffer = [9, 1, 3];
+            cv.insert_buffer_after(&buffer, from_pos, after_loc);
+
+            // assert
+            assert_eq!(*expected, cv.0);
+        }
+    }
+
+    #[test]
+    fn moves_left_correct_wrap() {
+        // starting from position [7] == 4(,6,7)
+        let from_pos = 7;
+        let cases = [
+            (2, vec![3, 2, 4, 6, 7, 5, 8, 9, 1]),
+            (5, vec![3, 2, 5, 4, 6, 7, 8, 9, 1]),
+        ];
+
+        for (after_value, expected) in cases.iter() {
+            // arrange
+            let mut cv = create();
+            assert_eq!(*cv.get_wrapped(from_pos).unwrap(), 4);
+            let after_loc = cv.find_value_pos(from_pos, *after_value).unwrap();
+
+            // act
+            let buffer = [4, 6, 7];
             cv.insert_buffer_after(&buffer, from_pos, after_loc);
 
             // assert
