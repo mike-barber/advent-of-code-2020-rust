@@ -81,6 +81,8 @@ fn main() -> Result<()> {
 
         let next_current_cup = cup_right_of(current_cup, &state);
         current_cup = next_current_cup;
+
+        println!("state {:?} next {}", state, current_cup);
     }
     println!("final current cup: {}", current_cup);
     let pos1 = state.iter().position(|v| *v == 1).unwrap();
