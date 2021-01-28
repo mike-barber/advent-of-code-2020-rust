@@ -80,7 +80,17 @@ impl CircularVec {
                 }
             }
             FoundPos::Right(after) => {
-                todo!()
+                let shifts = after - from_pos - 3 + 1;
+                for i in 0..shifts {
+                    let dst = from_pos + i;
+                    let src = from_pos + i + buffer.len();
+                    let val = self.get_wrapped(src).unwrap();
+                    *self.get_mut_wrapped(dst).unwrap() = *val;
+                }
+                for i in 0..buffer.len() {
+                    let dst = from_pos + shifts + i;
+                    *self.get_mut_wrapped(dst).unwrap() = buffer[i];
+                }
             }
         }
     }
