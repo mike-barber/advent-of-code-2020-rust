@@ -1,5 +1,5 @@
 use eyre::{eyre, Result};
-use std::fmt::format;
+use std::{fmt::format, todo};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 enum FoundPos {
@@ -79,7 +79,9 @@ impl CircularVec {
                     *self.get_mut_wrapped(dst).unwrap() = buffer[i];
                 }
             }
-            FoundPos::Right(after) => {}
+            FoundPos::Right(after) => {
+                todo!()
+            }
         }
     }
 }
@@ -112,6 +114,30 @@ mod tests {
             (7, vec![7, 9, 1, 3, 2, 5, 8, 4, 6]),
             (2, vec![7, 2, 9, 1, 3, 5, 8, 4, 6]),
             (5, vec![7, 2, 5, 9, 1, 3, 8, 4, 6]),
+        ];
+
+        for (after_value, expected) in cases.iter() {
+            // arrange
+            let mut cv = create();
+            assert_eq!(*cv.get_wrapped(from_pos).unwrap(), 9);
+            let after_loc = cv.find_value_pos(from_pos, *after_value).unwrap();
+
+            // act
+            let buffer = [9, 1, 3];
+            cv.insert_buffer_after(&buffer, from_pos, after_loc);
+
+            // assert
+            assert_eq!(*expected, cv.0);
+        }
+    }
+
+    #[test]
+    fn moves_right_correct() {
+        // starting from position [4] == 9(,1,3)
+        let from_pos = 4;
+        let cases = [
+            (4, vec![7, 2, 5, 8, 4, 9, 1, 3, 6]),
+            (6, vec![7, 2, 5, 8, 4, 6, 9, 1, 3]),
         ];
 
         for (after_value, expected) in cases.iter() {
