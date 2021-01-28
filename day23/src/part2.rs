@@ -1,10 +1,10 @@
 use eyre::{eyre, Result};
 use std::fmt::format;
 
-#[derive(Debug,Clone,Copy,PartialEq,Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 enum FoundPos {
     Left(usize),
-    Right(usize)
+    Right(usize),
 }
 
 #[derive(Debug)]
@@ -16,9 +16,8 @@ impl CircularVec {
     }
 
     // scan left and right from current position to find value
-    fn find_value_pos(&self, start_pos: usize, value:i32) -> Option<FoundPos> {
+    fn find_value_pos(&self, start_pos: usize, value: i32) -> Option<FoundPos> {
         for i in 1.. {
-            
             let left_idx = start_pos.checked_sub(i);
             let right_idx = start_pos.checked_add(i);
 
@@ -58,44 +57,47 @@ impl CircularVec {
         self.0.get_mut(iw)
     }
 
-    fn copy_to_buffer(&self, buffer: &mut[i32], start: usize) {
+    fn copy_to_buffer(&self, buffer: &mut [i32], start: usize) {
         for i in 0..buffer.len() {
-            buffer[i] = *self.get_wrapped(start+i).expect("copy invalid index");
+            buffer[i] = *self.get_wrapped(start + i).expect("copy invalid index");
         }
     }
 
-    fn insert_buffer_after(&mut self, buffer: &[i32], from_pos:usize, after_pos:FoundPos) {
+    fn insert_buffer_after(&mut self, buffer: &[i32], from_pos: usize, after_pos: FoundPos) {
         match after_pos {
             FoundPos::Left(after) => {
-                let distance = from_pos - after;
-                let moves = distance - buffer.len();
-                let dest_start = from_pos + buffer.len();
-                for i in 0..moves {
-                    let dst = dest_start - i;
-                    let src = dest_start - i - distance;
+                let shifts = from_pos - after - 1;
+                let dest_end = from_pos + buffer.len() - 1;
+                for i in 0..shifts {
+                    let dst = dest_end - i;
+                    let src = dest_end - i - buffer.len();
                     let val = self.get_wrapped(src).unwrap();
                     *self.get_mut_wrapped(dst).unwrap() = *val;
                 }
-            },
-            FoundPos::Right(after) => {
+                for i in 0..buffer.len() {
+                    let dst = after + 1 + i;
+                    *self.get_mut_wrapped(dst).unwrap() = buffer[i];
+                }
             }
+            FoundPos::Right(after) => {}
         }
     }
 }
 
-#[cfg(test)] 
+#[cfg(test)]
 mod tests {
+    use itertools::assert_equal;
+
     use super::{CircularVec, FoundPos};
 
-
     fn create() -> CircularVec {
-        CircularVec::create(&[7,2,5,8,9,1,3,4,6]) // 9 total
+        CircularVec::create(&[7, 2, 5, 8, 9, 1, 3, 4, 6]) // 9 total
     }
 
     #[test]
     fn find_correct() {
         let cv = create();
-        let start_pos = 5; // = 1 
+        let start_pos = 5; // = 1
 
         assert_eq!(None, cv.find_value_pos(start_pos, 1000));
         assert_eq!(Some(FoundPos::Left(0)), cv.find_value_pos(start_pos, 7));
@@ -106,9 +108,26 @@ mod tests {
 
     #[test]
     fn moves_left_correct() {
+        // starting from position [4] == 9
+        let from_pos = 4;
+        let cases = [
+            (7, vec![7, 9, 1, 3, 2, 5, 8, 4, 6]),
+            (2, vec![7, 2, 9, 1, 3, 5, 8, 4, 6]),
+            (5, vec![7, 2, 5, 9, 1, 3, 8, 4, 6]),
+        ];
 
+        for (after_value, expected) in cases.iter() {
+            // arrange
+            let mut cv = create();
+            assert_eq!(*cv.get_wrapped(from_pos).unwrap(), 9);
+            let after_loc = cv.find_value_pos(from_pos, *after_value).unwrap();
+
+            // act
+            let buffer = [9, 1, 3];
+            cv.insert_buffer_after(&buffer, from_pos, after_loc);
+
+            // assert
+            assert_eq!(*expected, cv.0);
+        }
     }
 }
-
-
-
