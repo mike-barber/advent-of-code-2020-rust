@@ -112,18 +112,22 @@ struct Game {
 }
 
 impl Game {
-    fn create_part1(initial_vector: &[i32]) -> Game {
-        let v: Vec<i32> = initial_vector.iter().copied().collect();
-        let current_value = *v.get(0).unwrap();
+    fn create_internal(initial_vector: Vec<i32>) -> Game {
+        let current_value = *initial_vector.get(0).unwrap();
         let min = *initial_vector.iter().min().unwrap();
-        let max = *v.last().unwrap();
+        let max = *initial_vector.iter().max().unwrap();
         Game {
-            state: CircularVec::create_vec(v),
+            state: CircularVec::create_vec(initial_vector),
             current_pos: 0,
             current_value,
             min,
             max,
         }
+    }
+
+    fn create_part1(initial_vector: &[i32]) -> Game {
+        let v: Vec<i32> = initial_vector.iter().copied().collect();
+        Self::create_internal(v)
     }
 
     // initialise for part 2 -- take the initial vector, then proceed by adding 1 until we
@@ -138,16 +142,8 @@ impl Game {
             .chain(remaining_range)
             .take(total_cups)
             .collect();
-        let current_value = *v.get(0).unwrap();
-        let min = *initial_vector.iter().min().unwrap();
-        let max = *v.last().unwrap();
-        Game {
-            state: CircularVec::create_vec(v),
-            current_pos: 0,
-            current_value,
-            min,
-            max,
-        }
+
+        Self::create_internal(v)
     }
 
     fn find_next_lowest_number(&self, start_number: i32, exclude: &[i32]) -> i32 {
@@ -249,6 +245,28 @@ mod tests {
 
     fn create() -> CircularVec {
         CircularVec::create(&[7, 2, 5, 8, 9, 1, 3, 4, 6]) // 9 total
+    }
+
+    fn assert_circular_eq(expected: &[i32], actual: &[i32], message: &str) {
+        let expected = CircularVec::create(expected);
+        let actual = CircularVec::create(actual);
+        assert_eq!(expected.0.len(), actual.0.len(), "length");
+        let len = expected.0.len();
+        let mut any_match = false;
+        for offset in 0..len {
+            if (0..len)
+                .into_iter()
+                .all(|i| expected.get_wrapped(i) == actual.get_wrapped(i + offset))
+            {
+                any_match = true;
+                break;
+            }
+        }
+        assert!(
+            any_match,
+            "{} no match found {:?} vs {:?}",
+            message, expected, actual
+        );
     }
 
     #[test]
@@ -354,7 +372,6 @@ mod tests {
     #[test]
     fn test_part1_expected() {
         let expected_sequence = [
-            [3, 8, 9, 1, 2, 5, 4, 6, 7],
             [3, 2, 8, 9, 1, 5, 4, 6, 7],
             [3, 2, 5, 4, 6, 7, 8, 9, 1],
             [7, 2, 5, 8, 9, 1, 3, 4, 6],
@@ -367,7 +384,18 @@ mod tests {
             [5, 8, 3, 7, 4, 1, 9, 2, 6],
         ];
         let init = vec_from_chars("389125467");
- 
-        
+        let mut game = Game::create_part1(&init);
+
+        let mut buffer = [0; BUF_SIZE];
+        for (i, expected) in expected_sequence.iter().enumerate() {
+            let round = i + 1;
+            game.play_round(&mut buffer);
+            //assert_eq!(expected.to_vec(), game.state.0, "checking round {}", round);
+            assert_circular_eq(
+                expected,
+                &game.state.0,
+                &format!("checking round {}", round),
+            );
+        }
     }
 }
