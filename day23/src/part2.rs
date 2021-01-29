@@ -21,6 +21,26 @@ impl CircularVec {
         CircularVec(values)
     }
 
+    // rotate the vector so that the ref_pos is in the middle; returns new ref_pos
+    fn conditional_rotate_centre(&mut self, ref_pos: usize, tolerance: usize) -> usize {
+        let mid = self.0.len() / 2;
+        if ref_pos > mid {
+            if ref_pos - mid > tolerance {
+                print!("*");
+                self.0.rotate_left(ref_pos - mid);
+                return mid;
+            }
+            
+        } else if ref_pos < mid {
+            if mid - ref_pos > tolerance {
+                print!("*");
+                self.0.rotate_right(mid - ref_pos);
+                return mid;
+            }
+        }
+        ref_pos // unchanged
+    }
+
     // scan left and right from current position to find value
     fn find_value_pos(&self, start_pos: usize, value: i32) -> Option<FoundPos> {
         for i in 1.. {
@@ -162,11 +182,16 @@ impl Game {
     fn play_round(&mut self, buffer: &mut [i32]) {
         use std::time::Instant;
 
-        let from = self.current_pos + 1;
+        // let t0 = Instant::now();
 
-        let t0 = Instant::now();
+        // rotate 
+        self.current_pos = self.state.conditional_rotate_centre(self.current_pos, 10_000);
+        let check_val = self.state.0.get(self.current_pos).unwrap();
+        assert_eq!(*check_val, self.current_value);
+        // let t_rotate = Instant::now();
         
         // extract buffer
+        let from = self.current_pos + 1;
         self.state.copy_to_buffer(buffer, from);
 
         // find destination cup value and position
@@ -175,11 +200,11 @@ impl Game {
             .state
             .find_value_pos(self.current_pos, dest_cup_value)
             .expect("could not find destination cup position");
-        let t_found = Instant::now();
+        // let t_found = Instant::now();
 
         // place buffer after the destination cup
         self.state.insert_buffer_after(buffer, from, dest_cup_pos);
-        let t_inserted = Instant::now();
+        // let t_inserted = Instant::now();
 
         // now locate the new position for our current cup, and advance to the next position
         // this could be made more efficient
@@ -190,9 +215,16 @@ impl Game {
         };
         let new_pos = self.state.wrapped(new_current_cup_pos + 1);
         let new_value = self.state.get_wrapped(new_pos).expect("new value");
-        let t_updated = Instant::now();
+        // let t_updated = Instant::now();
 
-        println!("\telapsed found {:?} inserted {:?} updated {:?} net {:?}\n", t_found - t0, t_inserted-t_found, t_updated - t_inserted, t_updated - t0);
+        // println!(
+        //     "\telapsed rotate {:?} found {:?} inserted {:?} updated {:?} net {:?}\n",
+        //     t_rotate - t0,
+        //     t_found - t_rotate,
+        //     t_inserted - t_found,
+        //     t_updated - t_inserted,
+        //     t_updated - t0
+        // );
 
         // store new state
         self.current_pos = new_pos;
@@ -242,10 +274,13 @@ pub fn test_part2() {
 
     let mut buffer = [0; BUF_SIZE];
     println!("start -> game {}", game);
-    for round in 0..10 {
+    for round in 0..1_000_000 {
         game.play_round(&mut buffer);
-        println!("round {} game {}", round, game);
+        if round % 10_000 == 0 {
+            println!("round {} game {}", round, game);
+        }
     }
+    println!("final game {}", game);
 }
 
 #[cfg(test)]
