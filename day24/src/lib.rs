@@ -35,10 +35,7 @@ impl Coord {
     where
         F: Fn(i32, i32) -> i32,
     {
-        Coord([
-            op(self.0[0], other.0[0]),
-            op(self.0[1], other.0[1])
-        ])
+        Coord([op(self.0[0], other.0[0]), op(self.0[1], other.0[1])])
     }
 }
 
@@ -81,7 +78,7 @@ impl From<[i32; 2]> for Coord {
 
 impl From<&[i32; 2]> for Coord {
     fn from(vals: &[i32; 2]) -> Self {
-        Coord(vals.clone())
+        Coord(*vals)
     }
 }
 

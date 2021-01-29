@@ -2,7 +2,6 @@ use std::{
     collections::HashMap,
     fs::File,
     io::{BufRead, BufReader},
-    todo,
 };
 
 use day24::{fold_directions, parser::directions, Coord, Dir};
@@ -24,7 +23,7 @@ fn parse_file(filename: &str) -> Result<Vec<Vec<Dir>>> {
 
 type FlipMap = HashMap<Coord, bool>;
 
-fn flip_tiles(all_directions: &Vec<Vec<Dir>>) -> FlipMap {
+fn flip_tiles(all_directions: &[Vec<Dir>]) -> FlipMap {
     let mut map = HashMap::new();
     for dirs in all_directions {
         let coord = fold_directions(dirs);
@@ -89,21 +88,11 @@ impl Evolution for FlipMap {
             .count()
     }
 
-    // fn calculate_flip_list(&self) -> Vec<(Coord, bool)> {
-    //     let mut flip_list = Vec::new();
-    //     for (c,v) in self {
-    //         let adjacent = self.count_black_adjacent(*c);
-    //         match (v,adjacent) {
-    //             // black -> flip to white
-    //             (true, adj) if adj == 0 => flip_list.push((*c, false)),
-    //             (true, adj) if adj > 2 => flip_list.push((*c, false)),
-    //             // white -> flip to black
-    //             (false, adj) if adj == 2 => flip_list.push((*c, true)),
-    //             _ => {} // no action
-    //         }
-    //     }
-    //     flip_list
-    // }
+    // Run through entire extent of the map, every coordinate, not just
+    // existing tiles. The map is sparse, so we need to consider the
+    // tiles adjacent to ones that are populated too. Could look at tiles
+    // strictly adjacent instead of the whole grid, but this is easy. Rust
+    // is fast.
     fn calculate_flip_list(&self) -> Vec<(Coord, bool)> {
         let mut flip_list = Vec::new();
 
@@ -137,11 +126,6 @@ impl Evolution for FlipMap {
 
 fn part2_results(filename: &str) -> Result<()> {
     let test_directions = parse_file(filename)?;
-    // for dirs in &test_directions {
-    //     let coord = fold_directions(&dirs);
-    //     println!("{:?} from {:?}", coord, dirs);
-    // }
-
     let mut flip_map = flip_tiles(&test_directions);
     println!("black tiles: {}", count_black(&flip_map));
 
@@ -156,11 +140,13 @@ fn part2_results(filename: &str) -> Result<()> {
 fn main() -> Result<()> {
     // part 1
     part1_results("day24/example-input.txt")?;
-    println!("actual...");
+    println!("\n\nactual...");
     part1_results("day24/input.txt")?;
 
     println!("\n\npart 2\n");
     part2_results("day24/example-input.txt")?;
+    println!("\n\nactual...");
+    part2_results("day24/input.txt")?;
 
     Ok(())
 }
