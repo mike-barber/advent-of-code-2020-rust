@@ -1,8 +1,9 @@
 use std::ops::{Add, AddAssign};
+use strum_macros::EnumIter;
 
 pub mod parser;
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, EnumIter)]
 pub enum Dir {
     NW,
     NE,
@@ -16,7 +17,7 @@ pub enum Dir {
 pub struct Coord([i32; 2]);
 
 impl Dir {
-    fn coord(&self) -> Coord {
+    pub fn coord(&self) -> Coord {
         use Dir::*;
         match self {
             NW => Coord([0, 1]),

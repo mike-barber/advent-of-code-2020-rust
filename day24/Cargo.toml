@@ -9,3 +9,5 @@ edition = "2018"
 [dependencies]
 nom = "6.0"
 eyre = "0.6"
+strum = "0.20" # for enumerable iteration
+strum_macros = "0.20"
