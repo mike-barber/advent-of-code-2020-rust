@@ -245,7 +245,7 @@ pub fn test_part2() {
 
 #[cfg(test)]
 mod tests {
-    use super::{CircularVec, FoundPos};
+    use super::*;
 
     fn create() -> CircularVec {
         CircularVec::create(&[7, 2, 5, 8, 9, 1, 3, 4, 6]) // 9 total
@@ -349,5 +349,25 @@ mod tests {
         cv.copy_to_buffer(&mut buffer, from_pos);
 
         assert_eq!(vec![4, 6, 7], buffer);
+    }
+
+    #[test]
+    fn test_part1_expected() {
+        let expected_sequence = [
+            [3, 8, 9, 1, 2, 5, 4, 6, 7],
+            [3, 2, 8, 9, 1, 5, 4, 6, 7],
+            [3, 2, 5, 4, 6, 7, 8, 9, 1],
+            [7, 2, 5, 8, 9, 1, 3, 4, 6],
+            [3, 2, 5, 8, 4, 6, 7, 9, 1],
+            [9, 2, 5, 8, 4, 1, 3, 6, 7],
+            [7, 2, 5, 8, 4, 1, 9, 3, 6],
+            [8, 3, 6, 7, 4, 1, 9, 2, 5],
+            [7, 4, 1, 5, 8, 3, 9, 2, 6],
+            [5, 7, 4, 1, 8, 3, 9, 2, 6],
+            [5, 8, 3, 7, 4, 1, 9, 2, 6],
+        ];
+        let init = vec_from_chars("389125467");
+ 
+        
     }
 }
