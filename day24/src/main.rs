@@ -1,56 +1,63 @@
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum Dir {
-    NW,
-    NE,
-    E,
-    SE,
-    SW,
-    W,
-}
-pub type Coord = [i32; 2];
+use std::{collections::HashMap, fs::File, io::{BufRead, BufReader}};
 
-mod parser {
-    use multi::many1;
-    use nom::{IResult, branch::*, bytes::complete::tag, character::complete::*, combinator::*, multi};
-    use crate::Dir::*;
-    use crate::Dir;
+use day24::{Coord, Dir, fold_directions, parser::directions};
+use eyre::{eyre, Result};
 
-    // returns a parsing function for the given direction
-    fn parse_dir(tag_str: &str, dir: Dir) -> impl Fn(&str) -> IResult<&str, Dir> {
-        let tt = tag_str.to_string();
-        move |i| map(tag(tt.as_str()), |_| dir)(i)
+fn parse_file(filename: &str) -> Result<Vec<Vec<Dir>>> {
+    let file = File::open(filename)?;
+    let buffered = BufReader::new(file);
+
+    let mut all_directions = Vec::new();
+    for l in buffered.lines() {
+        let l = l?;
+        let dirs = directions(&l).map_err(|e| eyre!("parsing error {}", e))?;
+        all_directions.push(dirs.1);
     }
-
-    fn direction(i: &str) -> IResult<&str, Dir> {
-        alt((
-            parse_dir("e", E),
-            parse_dir("se", SE),
-            parse_dir("sw", SW),
-            parse_dir("w", W),
-            parse_dir("nw", NW),
-            parse_dir("ne", NE),
-        ))(i)
-    }
-
-    pub fn directions(i: &str) -> IResult<&str, Vec<Dir>> {
-        many1(direction)(i)
-    }
-
-    #[cfg(test)]
-    mod tests {
-        use super::*;
-
-        #[test]
-        fn directions_parsed_correctly() {
-            let input = "nwwswee";
-            let parsed = directions(input).unwrap().1;
-            assert_eq!(vec![NW,W,SW,E,E], parsed);
-        }
-    }
-
+    Ok(all_directions)
 }
 
-fn main() {
-    println!("Hello, world!");
+type FlipMap = HashMap<Coord, bool>;
+
+fn flip_tiles(all_directions: &Vec<Vec<Dir>>) -> FlipMap {
+    let mut map = HashMap::new();
+    for dirs in all_directions {
+        let coord = fold_directions(dirs);
+        let item = map.entry(coord).or_insert(false);
+        *item ^= true;
+    }
+    map
 }
 
+fn count_black(flip_map: &FlipMap) -> usize {
+    flip_map.values().filter(|&v| *v).count()
+}
+
+// impl FlipMap {
+
+// }
+
+
+fn part1_results(filename: &str) -> Result<()> {
+    let test_directions = parse_file(filename)?;
+    // for dirs in &test_directions {
+    //     let coord = fold_directions(&dirs);
+    //     println!("{:?} from {:?}", coord, dirs);
+    // }
+
+    let flip_map = flip_tiles(&test_directions);
+    println!("flips: {:?}", flip_map);
+    println!("black tiles: {}", count_black(&flip_map));
+
+    Ok(())
+}
+
+
+fn main() -> Result<()> {
+    
+    part1_results("day24/example-input.txt")?;
+    println!("actual...");
+    part1_results("day24/input.txt")?;
+
+    
+    Ok(())
+}
