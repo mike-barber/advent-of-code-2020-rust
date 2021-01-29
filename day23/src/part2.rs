@@ -160,8 +160,12 @@ impl Game {
     }
 
     fn play_round(&mut self, buffer: &mut [i32]) {
+        use std::time::Instant;
+
         let from = self.current_pos + 1;
 
+        let t0 = Instant::now();
+        
         // extract buffer
         self.state.copy_to_buffer(buffer, from);
 
@@ -171,9 +175,11 @@ impl Game {
             .state
             .find_value_pos(self.current_pos, dest_cup_value)
             .expect("could not find destination cup position");
+        let t_found = Instant::now();
 
         // place buffer after the destination cup
         self.state.insert_buffer_after(buffer, from, dest_cup_pos);
+        let t_inserted = Instant::now();
 
         // now locate the new position for our current cup, and advance to the next position
         // this could be made more efficient
@@ -184,6 +190,9 @@ impl Game {
         };
         let new_pos = self.state.wrapped(new_current_cup_pos + 1);
         let new_value = self.state.get_wrapped(new_pos).expect("new value");
+        let t_updated = Instant::now();
+
+        println!("\telapsed found {:?} inserted {:?} updated {:?} net {:?}\n", t_found - t0, t_inserted-t_found, t_updated - t_inserted, t_updated - t0);
 
         // store new state
         self.current_pos = new_pos;
