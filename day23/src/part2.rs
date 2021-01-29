@@ -1,8 +1,6 @@
 use eyre::{eyre, Result};
-use std::{
-    fmt::{format, Display},
-    todo,
-};
+use itertools::chain;
+use std::{collections::HashMap, fmt::{format, Display}, todo, usize};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 enum FoundPos {
@@ -122,13 +120,116 @@ impl CircularVec {
     }
 }
 
+#[derive(Debug)]
+struct Node {
+    addr: usize, 
+    next_addr: Option<usize>,
+    prev_addr: Option<usize>,
+    value: i32,
+}
+
+struct CircularList {
+    nodes: Vec<Node>,
+    value_map: HashMap<i32, usize>
+}
+
+impl CircularList {
+    fn create(values: &[i32]) -> Self {
+        let mut nodes = Vec::new();
+        let mut value_map = HashMap::new();
+        let mut prev_addr = None;
+        for &v in values {
+            // add node
+            let addr = nodes.len(); // next 
+            let node = Node {
+                addr,
+                value: v,
+                next_addr: None,
+                prev_addr: prev_addr.clone(),
+            };
+            nodes.push(node);
+            // add to value map (and ensure it is unique)
+            assert!(value_map.insert(v, addr).is_none());
+            // update prev_addr to current
+            prev_addr = Some(addr);    
+        }
+        // link end node back to first and return list
+        nodes.last_mut().unwrap().next_addr = Some(0);
+        CircularList {
+            nodes,
+            value_map
+        }
+    }
+
+    fn get(&self, addr: usize) -> Option<&Node> {
+        self.nodes.get(addr)
+    }
+
+    fn get_mut(&mut self, addr: usize) -> Option<&mut Node> {
+        self.nodes.get_mut(addr)
+    }
+
+    fn next_addr(&self, node: &Node) -> Option<usize> {
+        node.next_addr
+    }
+
+    fn prev(&self, node: &Node) -> Option<usize> {
+        node.prev_addr
+    }
+
+    fn find_value(&self, value:i32) -> Option<usize> {
+        self.value_map.get(&value).copied()
+    }
+
+    fn move_chain(&mut self, chain_start: usize, chain_length: usize, attach_after: usize) {
+        // walk along chain to find end address
+        let chain_end = (0..chain_length).fold(chain_start, |acc,_| self.get(acc).unwrap().next_addr.unwrap());
+
+        // remove chain and rejoin
+        {
+            let prev = self.get(chain_start).unwrap().prev_addr.unwrap();
+            let next = self.get(chain_end).unwrap().next_addr.unwrap();
+            self.get_mut(prev).unwrap().next_addr = Some(next);
+            self.get_mut(next).unwrap().prev_addr = Some(prev);
+        }
+
+        // splice chain in again
+        {
+            let prev = attach_after;
+            let next = self.get(attach_after).unwrap().next_addr.unwrap();
+            self.get_mut(prev).unwrap().next_addr = Some(chain_start);
+            self.get_mut(next).unwrap().prev_addr = Some(chain_end);
+            self.get_mut(chain_start).unwrap().prev_addr = Some(prev);
+            self.get_mut(chain_end).unwrap().next_addr = Some(next);
+        }
+    }
+
+    fn copy_values(&self, destination: &mut[i32], chain_start: usize) {
+        let mut next_addr = chain_start;
+        for d in destination.iter_mut() {
+            let node = self.get(next_addr).unwrap();
+            *d = node.value;
+            next_addr = node.next_addr.unwrap();
+        }
+    }
+
+    fn copy_all_values(&self, chain_start: usize) -> Vec<i32> {
+        let mut res = vec![0; self.nodes.len()];
+        self.copy_values(&mut res, chain_start);
+        res
+    }
+}
+
+
+
 const BUF_SIZE: usize = 3;
 struct Game {
-    state: CircularVec,
+    state: CircularList,
     current_value: i32,
-    current_pos: usize,
+    current_addr: usize,
     min: i32,
     max: i32,
+    buffer: Vec<i32>
 }
 
 impl Game {
@@ -137,11 +238,12 @@ impl Game {
         let min = *initial_vector.iter().min().unwrap();
         let max = *initial_vector.iter().max().unwrap();
         Game {
-            state: CircularVec::create_vec(initial_vector),
-            current_pos: 0,
+            state: CircularList::create(&initial_vector),
+            current_addr: 0,
             current_value,
             min,
             max,
+            buffer: vec![0; BUF_SIZE]
         }
     }
 
@@ -179,76 +281,42 @@ impl Game {
         }
     }
 
-    fn play_round(&mut self, buffer: &mut [i32]) {
+    fn play_round(&mut self) {
         use std::time::Instant;
 
         // let t0 = Instant::now();
 
-        // rotate 
-        self.current_pos = self.state.conditional_rotate_centre(self.current_pos, 10_000);
-        let check_val = self.state.0.get(self.current_pos).unwrap();
-        assert_eq!(*check_val, self.current_value);
-        // let t_rotate = Instant::now();
-        
-        // extract buffer
-        let from = self.current_pos + 1;
-        self.state.copy_to_buffer(buffer, from);
+        // extract values in chain, starting at the next list location after the current node
+        let chain_start = self.state.get(self.current_addr).unwrap().next_addr.unwrap();
+        self.state.copy_values(&mut self.buffer, chain_start);
 
         // find destination cup value and position
-        let dest_cup_value = self.find_next_lowest_number(self.current_value, buffer);
-        let dest_cup_pos = self
+        let dest_cup_value = self.find_next_lowest_number(self.current_value, &self.buffer);
+        let dest_cup_addr = self
             .state
-            .find_value_pos(self.current_pos, dest_cup_value)
+            .find_value(dest_cup_value)
             .expect("could not find destination cup position");
-        // let t_found = Instant::now();
 
-        // place buffer after the destination cup
-        self.state.insert_buffer_after(buffer, from, dest_cup_pos);
-        // let t_inserted = Instant::now();
+        // move chain from where it is to after the destination cup
+        self.state.move_chain(chain_start, BUF_SIZE, dest_cup_addr);
 
-        // now locate the new position for our current cup, and advance to the next position
-        // this could be made more efficient
-        let new_current_cup_pos = match self.state.find_value_pos(from, self.current_value) {
-            Some(FoundPos::Left(p)) => p,
-            Some(FoundPos::Right(p)) => p,
-            _ => panic!("cannot find current cup"),
-        };
-        let new_pos = self.state.wrapped(new_current_cup_pos + 1);
-        let new_value = self.state.get_wrapped(new_pos).expect("new value");
-        // let t_updated = Instant::now();
-
-        // println!(
-        //     "\telapsed rotate {:?} found {:?} inserted {:?} updated {:?} net {:?}\n",
-        //     t_rotate - t0,
-        //     t_found - t_rotate,
-        //     t_inserted - t_found,
-        //     t_updated - t_inserted,
-        //     t_updated - t0
-        // );
-
+        // get the next cup after the current one (this might have changed after the move)
+        let next_addr = self.state.get(self.current_addr).unwrap().next_addr.unwrap();
+        let next_value = self.state.get(next_addr).unwrap().value;
+        
         // store new state
-        self.current_pos = new_pos;
-        self.current_value = *new_value;
+        self.current_addr = next_addr;
+        self.current_value = next_value;
     }
 }
 
 impl Display for Game {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        if self.state.0.len() >= 20 {
-            let start: Vec<i32> = self.state.0.iter().copied().take(10).collect();
-            let end: Vec<i32> = self.state.0.iter().rev().copied().take(10).rev().collect();
-            write!(
-                f,
-                "pos {} value {} state {:?}..{:?}",
-                self.current_pos, self.current_value, start, end
-            )
-        } else {
-            write!(
-                f,
-                "pos {} value {} state {:?}",
-                self.current_pos, self.current_value, self.state.0
-            )
-        }
+        // display after cup "1" by convention
+        let addr = self.state.find_value(1).ok_or(std::fmt::Error)?;
+        let mut vals = vec![0; 10];
+        let values = self.state.copy_values(&mut vals, addr);
+        write!(f, "pos {} value {} state {:?}", self.current_addr, self.current_value, vals)
     }
 }
 
@@ -260,22 +328,21 @@ pub fn test_part1() {
     let init = vec_from_chars("389125467");
     let mut game = Game::create_part1(&init);
 
-    let mut buffer = [0; BUF_SIZE];
     println!("start -> game {}", game);
     for round in 0..10 {
-        game.play_round(&mut buffer);
+        game.play_round();
         println!("round {} game {}", round, game);
     }
+    println!("Final result {:?}", game.state.copy_all_values(game.state.find_value(1).unwrap()))
 }
 
 pub fn test_part2() {
     let init = vec_from_chars("389125467");
     let mut game = Game::create_part2(&init, 1_000_000);
 
-    let mut buffer = [0; BUF_SIZE];
     println!("start -> game {}", game);
     for round in 0..1_000_000 {
-        game.play_round(&mut buffer);
+        game.play_round();
         if round % 10_000 == 0 {
             println!("round {} game {}", round, game);
         }
