@@ -99,7 +99,7 @@ impl CircularList {
 
 
 
-const BUF_SIZE: usize = 3;
+const CHAIN_LENGTH: usize = 3;
 struct Game {
     state: CircularList,
     current_value: i32,
@@ -120,7 +120,7 @@ impl Game {
             current_value,
             min,
             max,
-            buffer: vec![0; BUF_SIZE]
+            buffer: vec![0; CHAIN_LENGTH]
         }
     }
 
@@ -175,7 +175,7 @@ impl Game {
             .expect("could not find destination cup position");
 
         // move chain from where it is to after the destination cup
-        self.state.move_chain(chain_start, BUF_SIZE, dest_cup_addr);
+        self.state.move_chain(chain_start, CHAIN_LENGTH, dest_cup_addr);
 
         // get the next cup after the current one (this might have changed after the move)
         let next_addr = self.state.get(self.current_addr).unwrap().next_addr.unwrap();
