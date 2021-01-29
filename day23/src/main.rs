@@ -1,5 +1,4 @@
-use eyre::{eyre, Result};
-use std::{collections::VecDeque, fmt::format};
+use eyre::Result;
 
 mod part1;
 mod part2;
@@ -9,6 +8,7 @@ fn main() -> Result<()> {
 
     part2::test_part1();
     part2::test_part2();
+    part2::actual_part2();
 
     Ok(())
 }

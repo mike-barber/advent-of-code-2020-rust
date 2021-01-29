@@ -1,5 +1,5 @@
 use eyre::{eyre, Result};
-use std::{collections::VecDeque, fmt::format};
+use std::collections::VecDeque;
 
 struct Context {
     //cups: Vec<i8>,

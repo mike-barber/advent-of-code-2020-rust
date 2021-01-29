@@ -1,124 +1,4 @@
-use eyre::{eyre, Result};
-use itertools::chain;
-use std::{collections::HashMap, fmt::{format, Display}, todo, usize};
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-enum FoundPos {
-    Left(usize),
-    Right(usize),
-}
-
-#[derive(Debug)]
-struct CircularVec(Vec<i32>);
-
-impl CircularVec {
-    fn create(values: &[i32]) -> Self {
-        CircularVec(values.iter().copied().collect())
-    }
-    fn create_vec(values: Vec<i32>) -> Self {
-        CircularVec(values)
-    }
-
-    // rotate the vector so that the ref_pos is in the middle; returns new ref_pos
-    fn conditional_rotate_centre(&mut self, ref_pos: usize, tolerance: usize) -> usize {
-        let mid = self.0.len() / 2;
-        if ref_pos > mid {
-            if ref_pos - mid > tolerance {
-                print!("*");
-                self.0.rotate_left(ref_pos - mid);
-                return mid;
-            }
-            
-        } else if ref_pos < mid {
-            if mid - ref_pos > tolerance {
-                print!("*");
-                self.0.rotate_right(mid - ref_pos);
-                return mid;
-            }
-        }
-        ref_pos // unchanged
-    }
-
-    // scan left and right from current position to find value
-    fn find_value_pos(&self, start_pos: usize, value: i32) -> Option<FoundPos> {
-        for i in 1.. {
-            let left_idx = start_pos.checked_sub(i);
-            let right_idx = start_pos.checked_add(i);
-
-            let left_opt = left_idx.map(|j| self.0.get(j)).flatten();
-            let right_opt = right_idx.map(|j| self.0.get(j)).flatten();
-
-            if let Some(left) = left_opt {
-                if *left == value {
-                    return Some(FoundPos::Left(left_idx.unwrap()));
-                }
-            }
-
-            if let Some(right) = right_opt {
-                if *right == value {
-                    return Some(FoundPos::Right(right_idx.unwrap()));
-                }
-            }
-
-            if left_opt.is_none() && right_opt.is_none() {
-                break;
-            }
-        }
-        None
-    }
-
-    fn wrapped(&self, idx: usize) -> usize {
-        idx % self.0.len()
-    }
-
-    fn get_wrapped(&self, idx: usize) -> Option<&i32> {
-        let iw = self.wrapped(idx);
-        self.0.get(iw)
-    }
-
-    fn get_mut_wrapped(&mut self, idx: usize) -> Option<&mut i32> {
-        let iw = self.wrapped(idx);
-        self.0.get_mut(iw)
-    }
-
-    fn copy_to_buffer(&self, buffer: &mut [i32], start: usize) {
-        for i in 0..buffer.len() {
-            buffer[i] = *self.get_wrapped(start + i).expect("copy invalid index");
-        }
-    }
-
-    fn insert_buffer_after(&mut self, buffer: &[i32], from_pos: usize, after_pos: FoundPos) {
-        match after_pos {
-            FoundPos::Left(after) => {
-                let shifts = from_pos - after - 1;
-                let dest_end = from_pos + buffer.len() - 1;
-                for i in 0..shifts {
-                    let dst = dest_end - i;
-                    let src = dest_end - i - buffer.len();
-                    let val = self.get_wrapped(src).unwrap();
-                    *self.get_mut_wrapped(dst).unwrap() = *val;
-                }
-                for i in 0..buffer.len() {
-                    let dst = after + 1 + i;
-                    *self.get_mut_wrapped(dst).unwrap() = buffer[i];
-                }
-            }
-            FoundPos::Right(after) => {
-                let shifts = after - from_pos - 3 + 1;
-                for i in 0..shifts {
-                    let dst = from_pos + i;
-                    let src = from_pos + i + buffer.len();
-                    let val = self.get_wrapped(src).unwrap();
-                    *self.get_mut_wrapped(dst).unwrap() = *val;
-                }
-                for i in 0..buffer.len() {
-                    let dst = from_pos + shifts + i;
-                    *self.get_mut_wrapped(dst).unwrap() = buffer[i];
-                }
-            }
-        }
-    }
-}
+use std::{collections::HashMap, fmt::Display};
 
 #[derive(Debug)]
 struct Node {
@@ -148,13 +28,18 @@ impl CircularList {
                 prev_addr: prev_addr.clone(),
             };
             nodes.push(node);
+            // link prev node to this
+            if let Some(p) = prev_addr {
+                nodes[p].next_addr = Some(addr);
+            }
             // add to value map (and ensure it is unique)
             assert!(value_map.insert(v, addr).is_none());
             // update prev_addr to current
-            prev_addr = Some(addr);    
+            prev_addr = Some(addr);
         }
         // link end node back to first and return list
         nodes.last_mut().unwrap().next_addr = Some(0);
+        nodes.first_mut().unwrap().prev_addr = Some(nodes.last().unwrap().addr);
         CircularList {
             nodes,
             value_map
@@ -169,21 +54,13 @@ impl CircularList {
         self.nodes.get_mut(addr)
     }
 
-    fn next_addr(&self, node: &Node) -> Option<usize> {
-        node.next_addr
-    }
-
-    fn prev(&self, node: &Node) -> Option<usize> {
-        node.prev_addr
-    }
-
     fn find_value(&self, value:i32) -> Option<usize> {
         self.value_map.get(&value).copied()
     }
 
     fn move_chain(&mut self, chain_start: usize, chain_length: usize, attach_after: usize) {
         // walk along chain to find end address
-        let chain_end = (0..chain_length).fold(chain_start, |acc,_| self.get(acc).unwrap().next_addr.unwrap());
+        let chain_end = (0..chain_length-1).fold(chain_start, |acc,_| self.get(acc).unwrap().next_addr.unwrap());
 
         // remove chain and rejoin
         {
@@ -282,7 +159,7 @@ impl Game {
     }
 
     fn play_round(&mut self) {
-        use std::time::Instant;
+        //use std::time::Instant;
 
         // let t0 = Instant::now();
 
@@ -315,7 +192,7 @@ impl Display for Game {
         // display after cup "1" by convention
         let addr = self.state.find_value(1).ok_or(std::fmt::Error)?;
         let mut vals = vec![0; 10];
-        let values = self.state.copy_values(&mut vals, addr);
+        self.state.copy_values(&mut vals, addr);
         write!(f, "pos {} value {} state {:?}", self.current_addr, self.current_value, vals)
     }
 }
@@ -336,92 +213,73 @@ pub fn test_part1() {
     println!("Final result {:?}", game.state.copy_all_values(game.state.find_value(1).unwrap()))
 }
 
-pub fn test_part2() {
-    let init = vec_from_chars("389125467");
+fn run_part2(init_state: &str) -> i64 {
+    let init = vec_from_chars(init_state);
     let mut game = Game::create_part2(&init, 1_000_000);
 
     println!("start -> game {}", game);
-    for round in 0..1_000_000 {
+    for round in 0..10_000_000 {
         game.play_round();
-        if round % 10_000 == 0 {
+        if round % 1_000_000 == 0 {
             println!("round {} game {}", round, game);
         }
     }
     println!("final game {}", game);
+
+    let one_addr = game.state.find_value(1).unwrap();
+    let mut res = vec![0;3];
+    game.state.copy_values(&mut res, one_addr);
+
+    println!("result: {:?}", res);
+    let product = res[1] as i64 * res[2] as i64;
+    println!("product of [1]*[2] => {}", product); 
+    product
+}
+
+pub fn test_part2() {
+    let product = run_part2("389125467");
+    assert_eq!(149245887792, product);
+}
+
+pub fn actual_part2() {
+    let product = run_part2("963275481");
+    println!("final result {}", product);
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
 
-    fn create() -> CircularVec {
-        CircularVec::create(&[7, 2, 5, 8, 9, 1, 3, 4, 6]) // 9 total
+    fn create() -> CircularList {
+        CircularList::create(&[7, 2, 5, 8, 9, 1, 3, 4, 6]) // 9 total
     }
 
     fn assert_circular_eq(expected: &[i32], actual: &[i32], message: &str) {
-        let expected = CircularVec::create(expected);
-        let actual = CircularVec::create(actual);
-        assert_eq!(expected.0.len(), actual.0.len(), "length");
-        let len = expected.0.len();
-        let mut any_match = false;
-        for offset in 0..len {
-            if (0..len)
-                .into_iter()
-                .all(|i| expected.get_wrapped(i) == actual.get_wrapped(i + offset))
-            {
-                any_match = true;
-                break;
-            }
-        }
-        assert!(
-            any_match,
-            "{} no match found {:?} vs {:?}",
-            message, expected, actual
-        );
+        assert_eq!(expected.len(), actual.len(), "length");
+        let actual_circular = CircularList::create(actual);
+        let start_addr = actual_circular.find_value(expected[0]).unwrap();
+        let matched = actual_circular.copy_all_values(start_addr);
+        assert_eq!(expected, &matched, "element mismatch {}", message);
     }
 
     #[test]
     fn find_correct() {
         let cv = create();
-        let start_pos = 5; // = 1
-
-        assert_eq!(None, cv.find_value_pos(start_pos, 1000));
-        assert_eq!(Some(FoundPos::Left(0)), cv.find_value_pos(start_pos, 7));
-        assert_eq!(Some(FoundPos::Left(4)), cv.find_value_pos(start_pos, 9));
-        assert_eq!(Some(FoundPos::Right(6)), cv.find_value_pos(start_pos, 3));
-        assert_eq!(Some(FoundPos::Right(8)), cv.find_value_pos(start_pos, 6));
+        assert_eq!(None, cv.find_value(1000));
+        assert_eq!(Some(0), cv.find_value(7));
+        assert_eq!(Some(4), cv.find_value(9));
+        assert_eq!(Some(6), cv.find_value(3));
+        assert_eq!(Some(8), cv.find_value(6));
     }
 
     #[test]
     fn moves_left_correct() {
         // starting from position [4] == 9(,1,3)
-        let from_pos = 4;
+        let from_addr = 4;
         let cases = [
             (7, vec![7, 9, 1, 3, 2, 5, 8, 4, 6]),
             (2, vec![7, 2, 9, 1, 3, 5, 8, 4, 6]),
             (5, vec![7, 2, 5, 9, 1, 3, 8, 4, 6]),
-        ];
-
-        for (after_value, expected) in cases.iter() {
-            // arrange
-            let mut cv = create();
-            assert_eq!(*cv.get_wrapped(from_pos).unwrap(), 9);
-            let after_loc = cv.find_value_pos(from_pos, *after_value).unwrap();
-
-            // act
-            let buffer = [9, 1, 3];
-            cv.insert_buffer_after(&buffer, from_pos, after_loc);
-
-            // assert
-            assert_eq!(*expected, cv.0);
-        }
-    }
-
-    #[test]
-    fn moves_right_correct() {
-        // starting from position [4] == 9(,1,3)
-        let from_pos = 4;
-        let cases = [
             (4, vec![7, 2, 5, 8, 4, 9, 1, 3, 6]),
             (6, vec![7, 2, 5, 8, 4, 6, 9, 1, 3]),
         ];
@@ -429,53 +287,27 @@ mod tests {
         for (after_value, expected) in cases.iter() {
             // arrange
             let mut cv = create();
-            assert_eq!(*cv.get_wrapped(from_pos).unwrap(), 9);
-            let after_loc = cv.find_value_pos(from_pos, *after_value).unwrap();
-
+            
             // act
-            let buffer = [9, 1, 3];
-            cv.insert_buffer_after(&buffer, from_pos, after_loc);
+            let after_addr = cv.find_value(*after_value).unwrap();
+            cv.move_chain(from_addr, 3, after_addr);
 
             // assert
-            assert_eq!(*expected, cv.0);
+            assert_circular_eq(expected, &cv.copy_all_values(0), &format!("after {} expect {:?}", after_value, expected));
         }
     }
-
-    #[test]
-    fn moves_left_correct_wrap() {
-        // starting from position [7] == 4(,6,7)
-        let from_pos = 7;
-        let cases = [
-            (2, vec![3, 2, 4, 6, 7, 5, 8, 9, 1]),
-            (5, vec![3, 2, 5, 4, 6, 7, 8, 9, 1]),
-        ];
-
-        for (after_value, expected) in cases.iter() {
-            // arrange
-            let mut cv = create();
-            assert_eq!(*cv.get_wrapped(from_pos).unwrap(), 4);
-            let after_loc = cv.find_value_pos(from_pos, *after_value).unwrap();
-
-            // act
-            let buffer = [4, 6, 7];
-            cv.insert_buffer_after(&buffer, from_pos, after_loc);
-
-            // assert
-            assert_eq!(*expected, cv.0);
-        }
-    }
-
+    
     #[test]
     fn copy_to_buffer_correct() {
         // arrange
-        let from_pos = 7;
+        let from_addr = 7;
         let cv = create();
 
         // act
         let mut buffer = vec![0; 3];
 
         // assert
-        cv.copy_to_buffer(&mut buffer, from_pos);
+        cv.copy_values(&mut buffer, from_addr);
 
         assert_eq!(vec![4, 6, 7], buffer);
     }
@@ -497,14 +329,13 @@ mod tests {
         let init = vec_from_chars("389125467");
         let mut game = Game::create_part1(&init);
 
-        let mut buffer = [0; BUF_SIZE];
         for (i, expected) in expected_sequence.iter().enumerate() {
             let round = i + 1;
-            game.play_round(&mut buffer);
+            game.play_round();
             //assert_eq!(expected.to_vec(), game.state.0, "checking round {}", round);
             assert_circular_eq(
                 expected,
-                &game.state.0,
+                &game.state.copy_all_values(0),
                 &format!("checking round {}", round),
             );
         }
