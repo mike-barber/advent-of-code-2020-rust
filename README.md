@@ -1,6 +1,6 @@
 # Advent of Code 2020 
 
-[Advent of Code 2020](https://adventofcode.com/2020) was a great challenge. I ran out of time to tackle it in December when it was live, so had fun with it in January instead. I'd highly recommend doing it. I'll definitely do it again in 2021. 
+[Advent of Code 2020](https://adventofcode.com/2020) was a great challenge. I ran out of time to tackle it in December when it was live, so had fun with it in January instead. I'd highly recommend doing it. I'll definitely do it again in 2021. Donate too if you're able.
 
 For an additional challenge, I completed the whole thing in Rust. Not particularly neat Rust, either -- it's not meant to be production code :) 
 
